@@ -1,48 +1,53 @@
-const Koa = require('koa');
-const app = new Koa();
-const router = require('koa-router')();
-const convert = require('koa-convert');
-const bodyparser = require('koa-bodyparser')();
-const httpLogger = require('koa-logger');
+const Koa = require('koa')
+const app = new Koa()
+const router = require('koa-router')()
+const bodyparser = require('koa-bodyparser')
+const httpLogger = require('koa-logger')
+const respond = require('koa-respond')
 const logger = require('simple-node-logger').createSimpleLogger()
 const minimist = require('minimist')
 
 const config = require('./config')
 const db = require('./mongoose')
-const index = require('./routes/index');
-const users = require('./routes/users');
-
-// 数据库连接
-db.init()
+const routes = require('./routes')
 
 // 全局logger
 global.logger = logger
 
+// 数据库连接
+db.init()
+
 // middlewares
-app.use(bodyparser);
-app.use(httpLogger());
+app.use(bodyparser())
+app.use(httpLogger())
+app.use(respond({
+  methods: {
+    success: (ctx, body) => {
+      body = Object.assign({}, {
+        code: config.SERVER.CODE.SUCCESS
+      }, body)
+      ctx.send(200, body)
+    },
+    failed: (ctx, body) => {
+      body = Object.assign({}, {
+        code: config.SERVER.CODE.FAILED
+      }, body)
+      ctx.send(200, body)
+    }
+  }
+}))
 
-// logger
-app.use(async (ctx, next) => {
-  const start = new Date();
-  await next();
-  const ms = new Date() - start;
-  console.log(`${ctx.method} ${ctx.url} - ${ms}ms`);
-});
+// routes 绑定
+routes(router)
+app.use(router.routes(), router.allowedMethods())
 
-router.use('/', index.routes(), index.allowedMethods());
-router.use('/users', users.routes(), users.allowedMethods());
-
-app.use(router.routes(), router.allowedMethods());
-// response
-
+// error response listen
 app.on('error', function(err, ctx){
-  console.log(err)
-  httpLogger.error('server error', err, ctx);
-});
+  logger.error('server error', err)
+})
 
 // 设置 Cookie 签名密钥
 // 签名密钥只在配置项 signed 参数为真是才会生效
 app.keys = [config.AUTH.SECRET_KEY]
 
-module.exports = app;
+module.exports = app

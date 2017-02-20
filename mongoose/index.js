@@ -3,19 +3,33 @@
  */
 
 const mongoose = require('mongoose')
+const mongoosePaginate = require('mongoose-paginate')
+const autoIncrement = require('mongoose-auto-increment')
 const config = require('../config')
 mongoose.Promise = global.Promise
 
 module.exports = {
   mongoose,
   init () {
+    this.connect().plugin()
+  },
+  connect () {
     mongoose.connect(config.MONGODB.URI)
     const conn = mongoose.connection
     conn.on('error', () => {
-      logger.error(`===================数据库连接错误 version：${mongoose.version}===================`)
+      logger.error(`Mongodb数据库连接错误`)
     })
     conn.once('open', async function () {
-      logger.info(`===================数据库连接成功 version：${mongoose.version}===================`)
+      logger.info(`Mongodb数据库连接成功`)
     })
+    return this
+  },
+  plugin () {
+    // 分页
+    mongoosePaginate.paginate.options = {
+      limit: config.SERVER.LIMIT
+    }
+    // id自增
+    autoIncrement.initialize(mongoose.connection)
   }
 }
