@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/BubblyPoker/koapi#readme",
   "dependencies": {
+    "jsonwebtoken": "^7.3.0",
     "koa": "^2.0.0",
     "koa-bodyparser": "^3.2.0",
     "koa-logger": "^2.0.1",

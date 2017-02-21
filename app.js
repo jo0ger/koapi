@@ -1,6 +1,6 @@
 const Koa = require('koa')
 const app = new Koa()
-const router = require('koa-router')()
+const Router = require('koa-router')
 const bodyparser = require('koa-bodyparser')
 const httpLogger = require('koa-logger')
 const respond = require('koa-respond')
@@ -10,6 +10,9 @@ const minimist = require('minimist')
 const config = require('./config')
 const db = require('./mongoose')
 const routes = require('./routes')
+const router = new Router({
+  prefix: `/${config.SERVER.VERSION}`
+})
 
 // 全局logger
 global.logger = logger
@@ -42,7 +45,8 @@ routes(router)
 app.use(router.routes(), router.allowedMethods())
 
 // error response listen
-app.on('error', function(err, ctx){
+app.on('error', (err, ctx) => {
+  console.log(err)
   logger.error('server error', err)
 })
 

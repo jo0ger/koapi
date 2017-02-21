@@ -12,7 +12,7 @@ const categorySchema = new mongoose.Schema({
   name: { type: String, required: true },
   alias: String,
   description: String,
-  create_at: Number,
+  create_at: { type: Number, default: Date.now },
   update_at: Number,
   extends: [{key: String, value: Object}]
 })
@@ -25,12 +25,4 @@ categorySchema.plugin(autoIncrement.plugin, {
   incrementBy: 1
 })
 
-categorySchema.pre('save', next => {
-  this.update_at = Date.now().getTime()
-  if (this.isNew) {
-    this.create_at = this.update_at
-  }
-  next()
-})
-
-export default mongoose.model('Category', categorySchema)
+export default categorySchema

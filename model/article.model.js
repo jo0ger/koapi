@@ -6,6 +6,8 @@ const mongoose = require('mongoose')
 const autoIncrement = require('mongoose-auto-increment')
 const mongoosePaginate = require('mongoose-paginate')
 
+autoIncrement.initialize(mongoose.connection)
+
 const articleSchema = new mongoose.Schema({
   title: { type: String, required: true },
   keywords: [{type: String}],
@@ -21,20 +23,12 @@ const articleSchema = new mongoose.Schema({
   extends: [{key: String, value: Object}]
 })
 
-categorySchema.plugin(mongoosePaginate)
-categorySchema.plugin(autoIncrement.plugin, {
+articleSchema.plugin(mongoosePaginate)
+articleSchema.plugin(autoIncrement.plugin, {
   model: 'Category',
   field: 'id',
   startAt: 1,
   incrementBy: 1
 })
 
-categorySchema.pre('save', next => {
-  this.update_at = Date.now().getTime()
-  if (this.isNew) {
-    this.create_at = this.update_at
-  }
-  next()
-})
-
-export default mongoose.model('Article', articleSchema)
+export default articleSchema

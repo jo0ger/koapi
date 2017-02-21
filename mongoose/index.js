@@ -4,7 +4,6 @@
 
 const mongoose = require('mongoose')
 const mongoosePaginate = require('mongoose-paginate')
-const autoIncrement = require('mongoose-auto-increment')
 const config = require('../config')
 mongoose.Promise = global.Promise
 
@@ -29,7 +28,5 @@ module.exports = {
     mongoosePaginate.paginate.options = {
       limit: config.SERVER.LIMIT
     }
-    // id自增
-    autoIncrement.initialize(mongoose.connection)
   }
 }

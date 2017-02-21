@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken')
 const config = require('../config')
 const { handleError } = require('../util/handle')
 
+// 验证token
 function _authToken (req) {
   if (req && req.headers && req.headers.authorization) {
     const auths = req.headers.authorization.split(' ')
@@ -18,6 +19,7 @@ function _authToken (req) {
   return false
 }
 
+// 验证权限
 module.exports = async (ctx) => {
   const token = _authToken(ctx.request)
   if (token) {

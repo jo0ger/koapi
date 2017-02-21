@@ -6,6 +6,8 @@ const mongoose = require('mongoose')
 const autoIncrement = require('mongoose-auto-increment')
 const mongoosePaginate = require('mongoose-paginate')
 
+autoIncrement.initialize(mongoose.connection)
+
 const optionSchema = new mongoose.Schema({
   title: { type: String, required: true },
   sub_title: String,
@@ -17,4 +19,4 @@ const optionSchema = new mongoose.Schema({
   language: { type: String, default: 'zh-Hans' },
 })
 
-export default mongoose.model('Option', optionSchema)
+export default optionSchema

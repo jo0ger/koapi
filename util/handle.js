@@ -3,20 +3,15 @@
  */
 
 const config = require('../config')
-const { METHOD_NOT_ALLOWED } = config.SERVER.CODE
+const { METHOD_NOT_ALLOWED, FAILED } = config.SERVER.CODE
 
-export function handleRequest ({ ctx, type }) {
+export async function handleRequest ({ ctx, type, next }) {
   const method = ctx.request.method
   const support = !!type[method]
   if (support) {
-    type[method](ctx.request, ctx.response)
+    await type[method](ctx, next)
   } else {
-    let message = `不支持${method}请求类型`
-    logger.info(message)
-    ctx.send(METHOD_NOT_ALLOWED, {
-      code: FAILED,
-      message
-    })
+    handleError({ ctx, message: `${ctx.request.url}不支持${method}请求类型` })
   }
 }
 
@@ -28,10 +23,10 @@ export function handleSuccess ({ ctx, message = '请求成功', data = {} }) {
   })
 }
 
-export function handleError ({ ctx, message = '请求失败', error = {} }) {
+export function handleError ({ ctx, message = '请求失败', err = {} }) {
   logger.error(message)
   ctx.failed({
     message,
-    error
+    error: err
   })
 }
