@@ -19,7 +19,7 @@ export function handleSuccess ({ ctx, message = '请求成功', data = {} }) {
   logger.info(message)
   ctx.success({
     message,
-    data
+    data: data || {}
   })
 }
 
@@ -27,6 +27,6 @@ export function handleError ({ ctx, message = '请求失败', err = {} }) {
   logger.error(message)
   ctx.failed({
     message,
-    error: err
+    error: err || {}
   })
 }

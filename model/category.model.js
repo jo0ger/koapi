@@ -10,11 +10,10 @@ autoIncrement.initialize(mongoose.connection)
 
 const categorySchema = new mongoose.Schema({
   name: { type: String, required: true },
-  alias: String,
   description: String,
   create_at: { type: Number, default: Date.now },
   update_at: Number,
-  extends: [{key: String, value: Object}]
+  extends: [{ key: String, value: Object }]
 })
 
 categorySchema.plugin(mongoosePaginate)

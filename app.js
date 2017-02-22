@@ -4,17 +4,19 @@ const Router = require('koa-router')
 const bodyparser = require('koa-bodyparser')
 const httpLogger = require('koa-logger')
 const respond = require('koa-respond')
-const logger = require('simple-node-logger').createSimpleLogger()
+const logger = require('simple-node-logger').createSimpleLogger({
+  timestampFormat: 'YYYY-MM-DD HH:mm:ss'
+})
 const minimist = require('minimist')
 
 const config = require('./config')
 const db = require('./mongoose')
 const routes = require('./routes')
+
 const router = new Router({
   prefix: `/${config.SERVER.VERSION}`
 })
 
-// 全局logger
 global.logger = logger
 
 // 数据库连接
@@ -46,7 +48,7 @@ app.use(router.routes(), router.allowedMethods())
 
 // error response listen
 app.on('error', (err, ctx) => {
-  console.log(err)
+  console.log(err);
   logger.error('server error', err)
 })
 

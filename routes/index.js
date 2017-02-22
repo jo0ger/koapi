@@ -14,18 +14,26 @@ module.exports = router => {
     const allowedOrigins = ['http://bubblypoker.com', 'http://admin.bubblypoker.com']
     const origin = request.get('origin') || ''
     if (allowedOrigins.includes(origin) || origin.includes('localhost')) {
-      ctx.response.set('Access-Control-Allow-Origin', origin)
+      response.set('Access-Control-Allow-Origin', origin)
     }
-    ctx.response.set("Access-Control-Allow-Headers", "Authorization, Origin, No-Cache, X-Requested-With, If-Modified-Since, Pragma, Last-Modified, Cache-Control, Expires, Content-Type, X-E4M-With")
-    ctx.response.set("Access-Control-Allow-Methods", "PUT,PATCH,POST,GET,DELETE,OPTIONS")
-    ctx.response.set("Content-Type", "application/json;charset=utf-8")
-    ctx.response.set("X-Powered-By", `Koapi ${config.INFO.version}`)
+    response.set("Access-Control-Allow-Headers", "Authorization, Origin, No-Cache, X-Requested-With, If-Modified-Since, Pragma, Last-Modified, Cache-Control, Expires, Content-Type, X-E4M-With")
+    response.set("Access-Control-Allow-Methods", "PUT,PATCH,POST,GET,DELETE,OPTIONS")
+    response.set("Content-Type", "application/json;charset=utf-8")
+    response.set("X-Powered-By", `Koapi ${config.INFO.version}`)
 
     if (request.method === 'OPTIONS') {
       ctx.status = 200
       return false
     }
-    if (!await authIsVerified(ctx) && ctx.request.url !== 'GET') {
+
+    // 排除登录前的auth POST请求
+    if (request.url === '/auth' && (request.method === 'GET' || request.method === 'POST')) {
+      return next()
+    }
+
+    // 权限校验，排除所有非管理员的非GET请求
+    if (!await authIsVerified(ctx) && request.method !== 'GET') {
+      logger.error('权限校验失败')
       ctx.send(UNAUTHORIZED, {
         code: UNAUTHORIZED,
         message: '禁地勿闯！！！'
@@ -36,6 +44,13 @@ module.exports = router => {
     return next()
   })
 
+  // Auth
+  router.all('/auth', controllers.auth)
+
+  // Article文章
+  router.all('/article', controllers.article.list)
+  router.all('/article/:id', controllers.article.item)
+
   // Category分类
   router.all('/category', controllers.category.list)
   router.all('/category/:id', controllers.category.item)
@@ -43,4 +58,7 @@ module.exports = router => {
   // Tag标签
   router.all('/tag', controllers.tag.list)
   router.all('/tag/:id', controllers.tag.item)
+
+  // Option配置信息
+  router.all('/option', controllers.option)
 }

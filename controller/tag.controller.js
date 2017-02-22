@@ -3,22 +3,21 @@
  */
 
 const { 
-  handle: { handleRequest, handleSuccess, handleError }
+  handle: { handleRequest, handleSuccess, handleError },
+  validate: { isObjectId }
 } = require('../util')
-const Models = require('../model')
-const TagModel = Models.tag
-const ArticleModel = Models.article
+const { TagModel, ArticleModel } = require('../model')
 const authIsVerified = require('../middleware/auth')
 const tagCtrl = { list: {}, item: {} }
 
 // 获取标签列表，不分页
 tagCtrl.list.GET = async (ctx, next) => {
-  let { keyword = '' } = ctx.query
-  const keywordReg = new RegExp(keyword)
-  const query = {
-    $or: [
+  let { keyword } = ctx.query
+  let query = {}
+  if (keyword) {
+    const keywordReg = new RegExp(keyword)
+    query.$or = [
       { name: keywordReg },
-      { alias: keywordReg },
       { description: keywordReg }
     ]
   }
@@ -109,7 +108,7 @@ tagCtrl.list.DELETE = async (ctx, next) => {
 // 获取单个标签详情
 tagCtrl.item.GET = async (ctx, next) => {
   let { id } = ctx.params
-  if (!id) {
+  if (!isObjectId(id)) {
     handleError({ ctx, message: '缺少标签ID' })
     return
   }
@@ -142,7 +141,7 @@ tagCtrl.item.GET = async (ctx, next) => {
 tagCtrl.item.PUT = async (ctx, next) => {
   let { id } = ctx.params
   let { tag, tag: { name } } = ctx.request.body
-  if (!id) {
+  if (!isObjectId(id)) {
     handleError({ ctx, message: '缺少标签ID' })
     return
   }
@@ -174,7 +173,7 @@ tagCtrl.item.PUT = async (ctx, next) => {
 // 删除单个标签
 tagCtrl.item.DELETE = async (ctx, next) => {
   let { id } = ctx.params
-  if (!id) {
+  if (!isObjectId(id)) {
     handleError({ ctx, message: '缺少标签ID' })
     return
   }

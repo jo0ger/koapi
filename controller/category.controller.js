@@ -3,11 +3,10 @@
  */
 
 const { 
-  handle: { handleRequest, handleSuccess, handleError }
+  handle: { handleRequest, handleSuccess, handleError },
+  validate: { isObjectId }
 } = require('../util')
-const Models = require('../model')
-const CategoryModel = Models.category
-const ArticleModel = Models.article
+const { CategoryModel, ArticleModel } = require('../model')
 const authIsVerified = require('../middleware/auth')
 const categoryCtrl = { list: {}, item: {} }
 
@@ -18,7 +17,6 @@ categoryCtrl.list.GET = async (ctx, next) => {
   const query = {
     $or: [
       { name: keywordReg },
-      { alias: keywordReg },
       { description: keywordReg }
     ]
   }
@@ -108,7 +106,7 @@ categoryCtrl.list.DELETE = async (ctx, next) => {
 // 获取单个分类详情
 categoryCtrl.item.GET = async (ctx, next) => {
   let { id } = ctx.params
-  if (!id) {
+  if (!isObjectId(id)) {
     handleError({ ctx, message: '缺少分类ID' })
     return
   }
@@ -141,7 +139,7 @@ categoryCtrl.item.GET = async (ctx, next) => {
 categoryCtrl.item.PUT = async (ctx, next) => {
   let { id } = ctx.params
   let { category, category: { name } } = ctx.request.body
-  if (!id) {
+  if (!isObjectId(id)) {
     handleError({ ctx, message: '缺少分类ID' })
     return
   }
@@ -173,7 +171,7 @@ categoryCtrl.item.PUT = async (ctx, next) => {
 // 删除单个分类
 categoryCtrl.item.DELETE = async (ctx, next) => {
   let { id } = ctx.params
-  if (!id) {
+  if (!isObjectId(id)) {
     handleError({ ctx, message: '缺少分类ID' })
     return
   }

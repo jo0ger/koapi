@@ -30,6 +30,8 @@ module.exports = {
   },
   AUTH: {
     SECRET_KEY: minimist.authKey || 'Koapi',
-    EXPIRED: 60 * 60 * 24 * 365
+    EXPIRED: 60 * 60 * 24 * 365,
+    DEFAULT_NAME: minimist.defaultname || 'admin',
+    DEFAULT_PASSWORD: minimist.defaultpassword || 'admin'
   }
 }
