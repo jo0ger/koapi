@@ -44,6 +44,9 @@ module.exports = router => {
     return next()
   })
 
+  // Qiniu uptoken
+  router.all('/qiniu', controllers.qiniu)
+
   // Auth
   router.all('/auth', controllers.auth)
 

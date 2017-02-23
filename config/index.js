@@ -33,5 +33,12 @@ module.exports = {
     EXPIRED: 60 * 60 * 24 * 365,
     DEFAULT_NAME: minimist.defaultname || 'admin',
     DEFAULT_PASSWORD: minimist.defaultpassword || 'admin'
+  },
+  QINIU: {
+    accessKey: 'yvmsQiG7qdCesWCii3nMEMHK-8Ifi7EyRlcY1FmK',
+    secretKey: 'G8pkqYNw9OFxcGUvwL_Gia7b_bhV_5ejMxsNZENl',
+    bucket: 'koapi',
+    origin: 'http://koapi.u.qiniudn.com',
+    uploadURL: 'http://up.qiniu.com/'
   }
 }
