@@ -38,8 +38,7 @@ articleCtrl.list.GET = async (ctx, next) => {
     const keywordReg = new RegExp(keyword)
     query.$or = [
       { title:  keywordReg },
-      { excerpt:  keywordReg },
-      { content:  keywordReg }
+      { excerpt:  keywordReg }
     ]
   }
 
@@ -102,9 +101,9 @@ articleCtrl.list.GET = async (ctx, next) => {
   }
 
   // 如果未通过权限校验，将文章状态重置为1
-  if (!await authIsVerified(ctx)) {
-    query.state = 1
-  }
+  // if (!await authIsVerified(ctx)) {
+  //   query.state = 1
+  // }
 
   await ArticleModel.paginate(query, options)
     .then(articles => {
@@ -159,10 +158,10 @@ articleCtrl.list.PUT = async (ctx, next) => {
   await ArticleModel.update({ _id: { $in: articles }}, { $set: update }, { multi: true })
     .exec()
     .then(data => {
-      handleSuccess({ ctx, data, message: '文章批量操作成功'})
+      handleSuccess({ ctx, data, message: '操作成功'})
     })
     .catch(err => {
-      handleError({ ctx, err, message: '文章批量操作失败' })
+      handleError({ ctx, err, message: '操作失败' })
     })
 }
 
@@ -217,7 +216,7 @@ articleCtrl.item.GET = async (ctx, next) => {
 // 修改单篇文章
 articleCtrl.item.PUT = async (ctx, next) => {
   let { id } = ctx.params
-  let { article, article: { title } } = ctx.request.body
+  let { article, article: { title, content } } = ctx.request.body
   if (!isObjectId(id)) {
     return handleError({ ctx, message: '缺少文章id' })
   }

@@ -11,7 +11,7 @@ const optionCtrl = {}
 
 // 获取配置信息
 optionCtrl.GET = async (ctx, next) => {
-  await OptionModel.find({}).exec()
+  await OptionModel.findOne({}).exec()
     .then(data => {
       handleSuccess({ ctx, data, message: '配置信息获取成功' })
     })

@@ -10,7 +10,7 @@ module.exports = {
   SERVER: {
     ROOT_PATH: __dirname,
     LIMIT: 10,
-    PORT: 3000,
+    PORT: 5000,
     PREFIX: '/api',
     VERSION: 'v1',
     CODE: {
