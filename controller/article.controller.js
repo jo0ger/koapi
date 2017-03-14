@@ -191,13 +191,14 @@ articleCtrl.item.GET = async (ctx, next) => {
   const getRelatedArticles = async (data) => {
     if (data && data.tag && data.tag.length) {
       data.related = []
-      await ArticleModel.find({ $nin: [ data._id ], state: 1, tag: { $in: data.tag.map(t => t._id) }})
+      await ArticleModel.find({ _id: { $nin: [ data._id ] }, state: 1, tag: { $in: data.tag.map(t => t._id) }})
         .select('id title excerpt thumb create_at')
         .exec()
         .then(articles => {
           data.related = articles
         })
         .catch(err => {
+          console.error(err)
           logger.error(`相关文章获取失败,id:${data._id}`)
         })
     }
