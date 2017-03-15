@@ -137,7 +137,7 @@ articleCtrl.list.POST = async (ctx, next) => {
     return handleError({ ctx, message: '缺少文章内容' })
   }
 
-  await ArticleModel.create(article)
+  await new ArticleModel(article).save()
     .then(data => {
       handleSuccess({ ctx, data, message: '发布文章成功' })
     })
