@@ -128,7 +128,8 @@ articleCtrl.list.GET = async (ctx, next) => {
 
 // 发布新文章
 articleCtrl.list.POST = async (ctx, next) => {
-  let { article, article: { title, content } } = ctx.request.body
+  let article = ctx.request.body
+  let { title, content } = article
   if (!title) {
     return handleError({ ctx, message: '缺少文章标题' })
   }
