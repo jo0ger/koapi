@@ -18,7 +18,7 @@ articleCtrl.list.GET = async (ctx, next) => {
   
   // 过滤条件
   const options = {
-    sort: { id: -1 },
+    sort: { create_at: -1 },
     page: Number(page || 1),
     limit: Number(page_size || config.SERVER.LIMIT),
     populate: ['category', 'tag'],
@@ -101,9 +101,9 @@ articleCtrl.list.GET = async (ctx, next) => {
   }
 
   // 如果未通过权限校验，将文章状态重置为1
-  // if (!await authIsVerified(ctx)) {
-  //   query.state = 1
-  // }
+  if (!await authIsVerified(ctx)) {
+    query.state = 1
+  }
 
   await ArticleModel.paginate(query, options)
     .then(articles => {
@@ -202,7 +202,29 @@ articleCtrl.item.GET = async (ctx, next) => {
           logger.error(`相关文章获取失败,id:${data._id}`)
         })
     }
-    handleSuccess({ ctx, data, message: '文章详情获取成功' })    
+  }
+
+  const getSiblingArticles = async (data) => {
+    if (data && data._id) {
+      let query = {}
+      // 如果未通过权限校验，将文章状态重置为1
+      if (!await authIsVerified(ctx)) {
+        query.state = 1
+      }
+      let prev = await ArticleModel.findOne(query)
+        .select('title')
+        .sort('-create_at')
+        .lt('create_at', data.create_at)
+        .exec()
+      let next = await ArticleModel.findOne(query)
+        .select('title create_at')
+        .sort('create_at')
+        .gt('create_at', data.create_at)
+        .exec()
+      prev = prev && prev.toObject()
+      next = next && next.toObject()
+      data.sibling = { prev, next }
+    }
   }
 
   let data = await ArticleModel.findByIdAndUpdate(id, { $inc: { 'meta.visit': 1 } }, { new: true })
@@ -211,8 +233,13 @@ articleCtrl.item.GET = async (ctx, next) => {
     .catch(err => {
       handhandleError({ ctx, err, message: '文章详情获取失败' })
     })
-
+  if (data) {
+    data = data.toObject()
+  }
   await getRelatedArticles(data)
+  await getSiblingArticles(data)
+  handleSuccess({ ctx, data, message: '文章详情获取成功' })    
+  
 }
 
 // 修改单篇文章

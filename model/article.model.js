@@ -16,8 +16,6 @@ const articleSchema = new mongoose.Schema({
   // 缩略图，enable 是否显示，url 缩略图url，full 是否突屏
   // thumb: { enable: { type: Boolean, default: false }, url: String, full: { type: Boolean, default: false } },
   thumbs: [{ name: String, url: String }],
-  // 是否置顶
-  sticky: { type: Boolean, default: false },
   // 文章状态 => -1 回收站  0 草稿  1 已发布
   state: { type: Number, default: 1 },
   create_at: { type: Number, default: Date.now },
