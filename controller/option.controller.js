@@ -40,7 +40,8 @@ optionCtrl.POST = async (ctx, next) => {
 
 // 修改配置信息
 optionCtrl.PUT = async (ctx, next) => {
-  let { option, option: { _id } } = ctx.request.body
+  let option = ctx.request.body
+  let { _id } = option
   if (!isObjectId(_id)) {
     return handleError({ ctx, message: '缺少配置信息id' })
   }

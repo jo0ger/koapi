@@ -147,7 +147,7 @@ articleCtrl.list.POST = async (ctx, next) => {
 }
 
 // 批量修改文章（移入回收站，移出回收站）
-articleCtrl.list.PUT = async (ctx, next) => {
+articleCtrl.list.PATCH = async (ctx, next) => {
   let { articles, state } = ctx.request.body
   if (!articles || !articles.length) {
     return handleError({ ctx, message: '未选中文章' })
@@ -245,7 +245,8 @@ articleCtrl.item.GET = async (ctx, next) => {
 // 修改单篇文章
 articleCtrl.item.PUT = async (ctx, next) => {
   let { id } = ctx.params
-  let { article, article: { title, content } } = ctx.request.body
+  let article = ctx.request.body
+  let { title, content } = article
   if (!isObjectId(id)) {
     return handleError({ ctx, message: '缺少文章id' })
   }

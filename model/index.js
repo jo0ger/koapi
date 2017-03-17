@@ -20,7 +20,7 @@ files.every((file) => {
   return true
 })
 
-// 构建通用的schema
+// 构建schema
 function buildSchema (schema) {
   if (!schema) {
     return
@@ -28,12 +28,13 @@ function buildSchema (schema) {
   schema.set('versionKey', false)
   schema.set('toObject', { getters: true })
   schema.set('toJSON', { getters: true, virtuals: false })
-  schema.post('update', updateHook)
+  schema.pre('findOneAndUpdate', updateHook)
 }
 
 // 更新update_at
-function updateHook () {
-  this.update({}, { $set: { update_at: Date.now() }})
+function updateHook (next) {
+  this.findOneAndUpdate({}, { update_at: Date.now() })
+  next && next()
 }
 
 // 首字母大写

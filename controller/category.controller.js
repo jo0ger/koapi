@@ -138,7 +138,8 @@ categoryCtrl.item.GET = async (ctx, next) => {
 // 修改单个分类
 categoryCtrl.item.PUT = async (ctx, next) => {
   let { id } = ctx.params
-  let { category, category: { name } } = ctx.request.body
+  let category = ctx.request.body
+  let { name } = category
   if (!isObjectId(id)) {
     handleError({ ctx, message: '缺少分类ID' })
     return

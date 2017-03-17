@@ -64,4 +64,6 @@ module.exports = router => {
 
   // Option配置信息
   router.all('/option', controllers.option)
+
+  router.all('/statistics', controllers.statistics)
 }

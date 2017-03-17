@@ -23,9 +23,14 @@ const articleSchema = new mongoose.Schema({
   category: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
   tag: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
   meta: {
-    visit: { type: Number, default: 0 }
+    visit: { type: Number, default: 0 },
+    likes: { type: Number, default: 0 },
+    comments: { type: Number, default: 0 }
   },
-  extends: [{ key: String, value: Object }]
+  extends: [{
+    key: { type: String, validate: /\S+/ },
+    value: { type: String, validate: /\S+/ }
+  }]
 })
 
 articleSchema.plugin(mongoosePaginate)

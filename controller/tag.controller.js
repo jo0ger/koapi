@@ -140,7 +140,8 @@ tagCtrl.item.GET = async (ctx, next) => {
 // 修改单个标签
 tagCtrl.item.PUT = async (ctx, next) => {
   let { id } = ctx.params
-  let { tag, tag: { name } } = ctx.request.body
+  let tag = ctx.request.body
+  let { name } = tag
   if (!isObjectId(id)) {
     handleError({ ctx, message: '缺少标签ID' })
     return
