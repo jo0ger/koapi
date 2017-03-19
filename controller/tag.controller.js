@@ -114,7 +114,13 @@ tagCtrl.item.GET = async (ctx, next) => {
   }
 
   const findArticles = async (data) => {
-    await ArticleModel.find({ tag: id }).select('-tag').exec()
+    await ArticleModel.find({ tag: id })
+      .select('-tag')
+      .populate({
+        path: 'category',
+        select: 'name description extends'
+      })
+      .exec()
       .then(articles => {
         data = data.toObject()
         data.articles = articles

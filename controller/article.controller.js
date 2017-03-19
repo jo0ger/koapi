@@ -21,7 +21,10 @@ articleCtrl.list.GET = async (ctx, next) => {
     sort: { create_at: -1 },
     page: Number(page || 1),
     limit: Number(page_size || config.SERVER.LIMIT),
-    populate: ['category', 'tag'],
+    populate: [
+      { path: 'category', select: 'name description extends' },
+      { path: 'tag', select: 'name description extends' }
+    ],
     select: '-content' // 文章列表不需要content
   }
 
