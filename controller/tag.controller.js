@@ -36,7 +36,7 @@ tagCtrl.list.GET = async (ctx, next) => {
   // 查询article中的tag的聚合数据
   const getTagsCount = async (ctx, tags) => {
     let $match = {}
-    if (!authIsVerified(ctx)) {
+    if (!await authIsVerified(ctx)) {
       $match = { state: 1 }
     }
     await ArticleModel.aggregate([
@@ -48,7 +48,7 @@ tagCtrl.list.GET = async (ctx, next) => {
       } }
     ]).exec().then(counts => {
       tags = tags.map(tag => {
-        let matched = counts.find(count => count._id === tag._id)
+        let matched = counts.find(count => count._id.toString() === tag._id.toString())
         tag = tag.toObject()
         tag.count = matched && matched.total_count || 0
         return tag
@@ -66,7 +66,8 @@ tagCtrl.list.GET = async (ctx, next) => {
 
 // 新建标签
 tagCtrl.list.POST = async (ctx, next) => {
-  let { tag, tag: { name } } = ctx.request.body
+  let tag = ctx.request.body
+  let { name } = tag
 
   if (!name) {
     handleError({ ctx, message: '缺少标签名称' })

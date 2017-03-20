@@ -35,9 +35,10 @@ categoryCtrl.list.GET = async (ctx, next) => {
   // 查询article中的category的聚合数据
   const getCatesCount = async (ctx, categories) => {
     let $match = {}
-    if (!authIsVerified(ctx)) {
+    if (!await authIsVerified(ctx)) {
       $match = { state: 1 }
     }
+    
     await ArticleModel.aggregate([
       { $match },
       { $unwind: '$category' },
@@ -47,7 +48,7 @@ categoryCtrl.list.GET = async (ctx, next) => {
       } }
     ]).exec().then(counts => {
       categories = categories.map(category => {
-        let matched = counts.find(count => count._id === category._id)
+        let matched = counts.find(count => count._id.toString() === category._id.toString())
         category = category.toObject()
         category.count = matched && matched.total_count || 0
         return category
@@ -64,7 +65,8 @@ categoryCtrl.list.GET = async (ctx, next) => {
 
 // 新建分类
 categoryCtrl.list.POST = async (ctx, next) => {
-  let { category, category: { name } } = ctx.request.body
+  let category = ctx.request.body
+  let { name } = category
 
   if (!name) {
     handleError({ ctx, message: '缺少分类名称' })
