@@ -18,8 +18,8 @@ const articleSchema = new mongoose.Schema({
   thumbs: [{ name: String, url: String }],
   // 文章状态 => -1 回收站  0 草稿  1 已发布
   state: { type: Number, default: 1 },
-  create_at: { type: Number, default: Date.now },
-  update_at: Number,
+  create_at: { type: Date, default: Date.now },
+  update_at: { type: Date, default: Date.now },
   category: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
   tag: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
   meta: {

@@ -54,6 +54,9 @@ module.exports = router => {
   router.all('/article', controllers.article.list)
   router.all('/article/:id', controllers.article.item)
 
+  // Archive文章归档
+  router.all('/archives', controllers.archives)
+
   // Category分类
   router.all('/category', controllers.category.list)
   router.all('/category/:id', controllers.category.item)
