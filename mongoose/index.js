@@ -6,12 +6,11 @@ const mongoose = require('mongoose')
 const mongoosePaginate = require('mongoose-paginate')
 const md5 = require('md5')
 const config = require('../config')
+mongoose.Promise = global.Promise
 const { AuthModel } = require('../model')
 
-module.exports = {
-  mongoose,
+const db = {
   init () {
-    mongoose.Promise = global.Promise
     this.connect().plugin().hook()
   },
   connect () {
@@ -53,4 +52,9 @@ module.exports = {
       }
     })
   }
+}
+
+
+module.exports = {
+  init: db.init.bind(db)
 }

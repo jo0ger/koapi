@@ -12,7 +12,7 @@ const articleSchema = new mongoose.Schema({
   title: { type: String, required: true },
   keywords: [{ type: String }],
   excerpt: String,
-  content: { type: String, required: true },
+  content: { type: String, required: true, validate: /\S+/ },
   // 缩略图，enable 是否显示，url 缩略图url，full 是否突屏
   // thumb: { enable: { type: Boolean, default: false }, url: String, full: { type: Boolean, default: false } },
   thumbs: [{ name: String, url: String }],

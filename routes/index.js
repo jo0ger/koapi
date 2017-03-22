@@ -65,6 +65,10 @@ module.exports = router => {
   router.all('/tag', controllers.tag.list)
   router.all('/tag/:id', controllers.tag.item)
 
+  // Comment评论
+  router.all('/comment', controllers.comment.list)
+  router.all('/comment/:id', controllers.comment.item)
+
   // Option配置信息
   router.all('/option', controllers.option)
 

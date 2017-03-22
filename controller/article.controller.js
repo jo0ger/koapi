@@ -85,21 +85,17 @@ articleCtrl.list.GET = async (ctx, next) => {
 
   // 起始日期
   if (start_date) {
-    const gte = new Date(start_date)
-    if (gte.toString() !== 'Invalid Date') {
-      query.create_at = {
-        $gte: gte.getTime()
-      }
+    const $gte = new Date(start_date)
+    if ($gte.toString() !== 'Invalid Date') {
+      query.create_at = { $gte }
     }
   }
 
   // 结束日期
   if (end_date) {
-    const lte = new Date(end_date)
-    if (lte.toString() !== 'Invalid Date') {
-      query.create_at = Object.assign({}, query.create_at, {
-        $lte: lte.getTime()
-      })
+    const $lte = new Date(end_date)
+    if ($lte.toString() !== 'Invalid Date') {
+      query.create_at = Object.assign({}, query.create_at, { $lte })
     }
   }
 

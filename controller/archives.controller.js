@@ -59,19 +59,20 @@ archivesCtrl.GET = async (ctx, next) => {
   .exec().catch(err => {
      handleError({ ctx, err, message: '获取文章归档失败' })
   })
-  for (let m = 0, archive = list[m]; m < list.length; m++) {
-    for (let n = 0; n < archive.list.length; n++) {
-      let a = await ArticleModel.findById(archive.list[n]._id)
-        .populate('category tag')
-        .select('title category tag create_at update_at meta').exec()
-      archive.list.splice(n, 1, a.toObject())
-    }
-  }
   if (list) {
+    for (let m = 0, archive = list[m]; m < list.length; m++) {
+      for (let n = 0; n < archive.list.length; n++) {
+        let a = await ArticleModel.findById(archive.list[n]._id)
+          .populate('category tag')
+          .select('title category tag create_at update_at meta').exec()
+        archive.list.splice(n, 1, a.toObject())
+      }
+    }
     // 去除_id
     list.forEach(v => {
       delete v._id
     })
+    list.sort((m, n) => n.year - m.year)
     handleSuccess({
       ctx, 
       data: {

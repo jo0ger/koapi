@@ -1,0 +1,52 @@
+/**
+ * 评论 model
+ */
+
+const mongoose = require('mongoose')
+const autoIncrement = require('mongoose-auto-increment')
+const mongoosePaginate = require('mongoose-paginate')
+
+autoIncrement.initialize(mongoose.connection)
+
+const commentSchema = new mongoose.Schema({
+  // 评论通用项
+  create_at: { type: Date, default: Date.now }, // 创建时间
+  update_at: { type: Date, default: Date.now }, // 修改时间
+  content: { type: String, required: true, validate: /\S+/ }, // 评论内容
+  state: { type: Number, default: 1 },  // 状态 -2 垃圾评论 | -1 已删除 | 0 待审核 | 1 通过
+  author: {   // 评论发布者
+    name: { type: String, required: true, validate: /\S+/ },  // 姓名
+    // 邮箱
+    email: { type: String, required: true, validate: /\w[-\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\.)+[A-Za-z]{2,14}/ },
+    // 个人站点地址
+    site: { type: String, validate: /^((https|http):\/\/)+[A-Za-z0-9]+\.[A-Za-z0-9]+[\/=\?%\-&_~`@[\]\':+!]*([^<>\"\"])*$/ }
+  },
+  likes: { type: Number, default: 0 }, // 点赞数
+  sticky: { type: Boolean, default: false }, // 是否置顶
+  type: { type: Number, default: 0 }, // 类型 0 文章评论 | 1 页面评论 包括留言板或者作品展示页面等
+  meta: {
+    ip: String, // 用户IP
+    ip_location: Object,  // IP所在地
+    agent: { type: String, validate: /\S+/ } // user agent
+  } ,
+  extends: [{
+    key: { type: String, validate: /\S+/ },
+    value: { type: String, validate: /\S+/ }
+  }],
+  // 页面评论具备项
+  page_name: String,  // 页面名称，option model中Menu的name
+  // 文章评论具备项
+  article_id: String,  // 文章ID
+  // 子评论具备项
+  parent_id: String, // 父评论ID
+})
+
+commentSchema.plugin(mongoosePaginate)
+commentSchema.plugin(autoIncrement.plugin, {
+  model: 'Comment',
+  field: 'id',
+  startAt: 1,
+  incrementBy: 1
+})
+
+export default commentSchema

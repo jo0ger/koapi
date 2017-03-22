@@ -38,7 +38,7 @@ function updateHook (next) {
 }
 
 // 首字母大写
-function firstUpperCase(str) {
+function firstUpperCase (str) {
   return str.toLowerCase().replace(/( |^)[a-z]/g, (L) => L.toUpperCase());
 }
 
