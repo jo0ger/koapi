@@ -5,7 +5,8 @@
 const mongoose = require('mongoose')
 const { 
   handle: { handleRequest, handleSuccess, handleError },
-  validate: { isObjectId }
+  validate: { isObjectId },
+  marked
 } = require('../util')
 const config = require('../config')
 const { ArticleModel, CategoryModel, TagModel } = require('../model')
@@ -136,6 +137,8 @@ articleCtrl.list.POST = async (ctx, next) => {
     return handleError({ ctx, message: '缺少文章内容' })
   }
 
+  article.rendered_content = marked(content)
+
   await new ArticleModel(article).save()
     .then(data => {
       handleSuccess({ ctx, data, message: '发布文章成功' })
@@ -147,15 +150,15 @@ articleCtrl.list.POST = async (ctx, next) => {
 
 // 批量修改文章（移入回收站，移出回收站）
 articleCtrl.list.PATCH = async (ctx, next) => {
-  let { articles, state } = ctx.request.body
-  if (!articles || !articles.length) {
+  let { article_ids, state } = ctx.request.body
+  if (!article_ids || !article_ids.length) {
     return handleError({ ctx, message: '未选中文章' })
   }
   let update = {}
   if ([-1, 0, 1, '-1', '0', '1'].includes(state)) {
     update.state = Number(state)
   }
-  await ArticleModel.update({ _id: { $in: articles }}, { $set: update }, { multi: true })
+  await ArticleModel.update({ _id: { $in: article_ids }}, { $set: update }, { multi: true })
     .exec()
     .then(data => {
       handleSuccess({ ctx, data, message: '操作成功'})
@@ -167,11 +170,11 @@ articleCtrl.list.PATCH = async (ctx, next) => {
 
 // 批量删除文章
 articleCtrl.list.DELETE = async (ctx, next) => {
-  let { articles } = ctx.request.body
-  if (!articles || !articles.length) {
+  let { article_ids } = ctx.request.body
+  if (!article_ids || !article_ids.length) {
     return handleError({ ctx, message: '未选中文章' })
   }
-  await ArticleModel.remove({ _id: { $in: articles } }).exec()
+  await ArticleModel.remove({ _id: { $in: article_ids } }).exec()
     .then(data => {
       handleSuccess({ ctx, data, message: '文章批量删除成功' })
     })
@@ -211,7 +214,7 @@ articleCtrl.item.GET = async (ctx, next) => {
         query.state = 1
       }
       let prev = await ArticleModel.findOne(query)
-        .select('title')
+        .select('title create_at')
         .sort('-create_at')
         .lt('create_at', data.create_at)
         .exec()
@@ -227,6 +230,7 @@ articleCtrl.item.GET = async (ctx, next) => {
   }
 
   let data = await ArticleModel.findByIdAndUpdate(id, { $inc: { 'meta.visit': 1 } }, { new: true })
+    .select('-content') // 不返回content
     .populate('category tag')
     .exec()
     .catch(err => {
@@ -255,6 +259,7 @@ articleCtrl.item.PUT = async (ctx, next) => {
   if (!content) {
     return handleError({ ctx, message: '缺少文章内容' })
   }
+  article.rendered_content = marked(content)
   await ArticleModel.findByIdAndUpdate(id, article, { new: true })
     .exec()
     .then(data => {

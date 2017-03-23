@@ -5,3 +5,4 @@
 exports.handle = require('./handle')
 exports.date = require('./date')
 exports.validate = require('./validate')
+exports.marked = require('./marked')

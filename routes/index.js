@@ -3,7 +3,7 @@
  */
 
 const config = require('../config')
-const { UNAUTHORIZED } = config.SERVER.CODE
+const { UNAUTHORIZED, NOT_FOUND } = config.SERVER.CODE
 const controllers = require('../controller')
 const authIsVerified = require('../middleware/auth')
 
@@ -50,6 +50,9 @@ module.exports = router => {
   // Auth
   router.all('/auth', controllers.auth)
 
+  // Like 点赞
+  router.all('/like', controllers.like)
+
   // Article文章
   router.all('/article', controllers.article.list)
   router.all('/article/:id', controllers.article.item)
@@ -73,4 +76,11 @@ module.exports = router => {
   router.all('/option', controllers.option)
 
   router.all('/statistics', controllers.statistics)
+
+  router.all('*', async (ctx, next) => {
+    ctx.send(NOT_FOUND, {
+      code: -1,
+      message: '少侠，此API无效'
+    })
+  })
 }

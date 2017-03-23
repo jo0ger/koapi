@@ -4,11 +4,9 @@ const Router = require('koa-router')
 const bodyparser = require('koa-bodyparser')
 const httpLogger = require('koa-logger')
 const respond = require('koa-respond')
-const logger = require('simple-node-logger').createSimpleLogger({
-  timestampFormat: 'YYYY-MM-DD HH:mm:ss'
-})
 const minimist = require('minimist')
 
+const logger = require('./util/logger')
 const config = require('./config')
 const db = require('./mongoose')
 const routes = require('./routes')

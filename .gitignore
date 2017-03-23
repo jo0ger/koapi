@@ -1,5 +1,4 @@
 # Logs
-logs
 *.log
 
 # Runtime data
@@ -29,4 +28,6 @@ node_modules
 # Debug log from npm
 npm-debug.log
 
+# IDEA
 .vscode
+.idea

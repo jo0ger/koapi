@@ -25,7 +25,7 @@ export function handleSuccess ({ ctx, message = '请求成功', data = {} }) {
 
 export function handleError ({ ctx, message = '请求失败', err = {} }) {
   logger.error(message)
-  console.error(err)
+  Object.keys(err).length && console.error(err)
   ctx.failed({
     message,
     error: err || {}
