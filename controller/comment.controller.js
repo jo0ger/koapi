@@ -25,7 +25,7 @@ commentCtrl.list.GET = async (ctx, next) => {
   const options = {
     sort: { create_at: 1 },
     page: Number(page || 1),
-    limit: Number(page_size || config.SERVER.COMMENT_LIMIT),
+    limit: Number(page_size || config.BLOG.LIMIT),
     lean: true
   }
 

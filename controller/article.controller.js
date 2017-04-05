@@ -15,13 +15,13 @@ const articleCtrl = { list: {}, item: {} }
 
 // 获取文章列表
 articleCtrl.list.GET = async (ctx, next) => {
-  let { page, page_size, state, keyword, category, tag, start_date, end_date } = ctx.query
+  let { page, page_size, state, keyword, category, tag, start_date, end_date, hot } = ctx.query
   
   // 过滤条件
   const options = {
     sort: { create_at: -1 },
     page: Number(page || 1),
-    limit: Number(page_size || config.SERVER.LIMIT),
+    limit: Number(page_size || config.BLOG.LIMIT),
     populate: [
       { path: 'category', select: 'name description extends' },
       { path: 'tag', select: 'name description extends' }
@@ -44,6 +44,15 @@ articleCtrl.list.GET = async (ctx, next) => {
       { title:  keywordReg },
       { excerpt:  keywordReg }
     ]
+  }
+
+  if (!!hot) {
+    options.sort = {
+      'meta.comments': -1,
+      'meta.like': -1,
+      'meta.visit': -1
+    }
+    options.select = 'title create_at'
   }
 
   // 分类查询

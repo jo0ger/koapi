@@ -27,7 +27,7 @@ const db = {
   plugin () {
     // 分页
     mongoosePaginate.paginate.options = {
-      limit: config.SERVER.LIMIT
+      limit: config.BLOG.LIMIT
     }
     return this
   },

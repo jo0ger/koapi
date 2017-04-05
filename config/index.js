@@ -9,8 +9,6 @@ module.exports = {
   },
   SERVER: {
     ROOT_PATH: __dirname,
-    LIMIT: 10,
-    COMMENT_LIMIT: 99,
     PORT: 5000,
     PREFIX: '/api',
     VERSION: 'v1',
@@ -23,6 +21,10 @@ module.exports = {
       METHOD_NOT_ALLOWED: 405,
       INTERNAL_SERVER_ERROR: 500
     }
+  },
+  BLOG: {
+    LIMIT: 10,
+    COMMENT_LIMIT: 99
   },
   MONGODB: {
     URI: 'mongodb://127.0.0.1/koapi',
