@@ -30,6 +30,7 @@ archivesCtrl.GET = async (ctx, next) => {
     { $project: {
       year: { $year: "$create_at" },
       title: 1,
+      excerpt: 1,
       create_at: 1,
       'meta.visit': 1,
       'meta.comments': 1,
@@ -44,6 +45,7 @@ archivesCtrl.GET = async (ctx, next) => {
         $push: {
           _id: '$_id',
           title: '$title',
+          excerpt: '$excerpt',
           create_at: '$create_at',
           meta: {
             visit: '$meta.visit',
