@@ -25,8 +25,9 @@ archivesCtrl.GET = async (ctx, next) => {
   let list = await ArticleModel.aggregate([
     { $match },
     { $sort: { create_at: -1 } },
-    { $skip },
-    { $limit },
+    // 先不分页了
+    // { $skip },
+    // { $limit },
     { $project: {
       year: { $year: "$create_at" },
       title: 1,
@@ -79,12 +80,13 @@ archivesCtrl.GET = async (ctx, next) => {
       ctx, 
       data: {
         list,
-        pagination: {
-          total,
-          current_page: $page,
-          total_page: Math.ceil(total / $limit),
-          per_page: $limit
-        }
+        total
+        // pagination: {
+        //   total,
+        //   current_page: $page,
+        //   total_page: Math.ceil(total / $limit),
+        //   per_page: $limit
+        // }
       },
       message: '获取文章归档成功' }
     )
