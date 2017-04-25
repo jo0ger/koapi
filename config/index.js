@@ -4,8 +4,8 @@ module.exports = {
   INFO: {
     name: 'Koapi',
     version: '1.0.0',
-    author: 'BubblyPoker',
-    site: 'http://bubblypoker.com'
+    author: 'Jooger',
+    site: 'https://jooger.me'
   },
   SERVER: {
     ROOT_PATH: __dirname,
@@ -24,7 +24,8 @@ module.exports = {
   },
   BLOG: {
     LIMIT: 10,
-    COMMENT_LIMIT: 99
+    COMMENT_LIMIT: 99,
+    DATE_FORMAT: 'yyyy-MM-dd'
   },
   MONGODB: {
     URI: 'mongodb://127.0.0.1/koapi',
