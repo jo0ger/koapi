@@ -13,6 +13,8 @@ const tagSchema = new mongoose.Schema({
   description: String,
   create_at: { type: Number, default: Date.now },
   update_at: Number,
+  // 扩展项
+  // icon color 等
   extends: [ { key: String, value: Object } ]
 })
 

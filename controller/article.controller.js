@@ -52,7 +52,7 @@ articleCtrl.list.GET = async (ctx, next) => {
       'meta.like': -1,
       'meta.visit': -1
     }
-    options.select = 'title create_at meta'
+    options.select = 'title create_at meta tag thumbs'
   }
 
   // 分类查询
