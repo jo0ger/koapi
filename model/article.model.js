@@ -21,7 +21,7 @@ const articleSchema = new mongoose.Schema({
   state: { type: Number, default: 1 },
   create_at: { type: Date, default: Date.now },
   update_at: { type: Date, default: Date.now },
-  category: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
+  category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
   tag: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Tag' }],
   meta: {
     visit: { type: Number, default: 0 },

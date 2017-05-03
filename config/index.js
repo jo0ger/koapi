@@ -25,7 +25,11 @@ module.exports = {
   BLOG: {
     LIMIT: 10,
     COMMENT_LIMIT: 99,
-    DATE_FORMAT: 'yyyy-MM-dd'
+    DATE_FORMAT: 'yyyy-MM-dd',
+    DEFAULT_CATEGORY: [
+      { name: 'CODE', description: 'CODE' },
+      { name: 'THINK', description: 'THINK' }
+    ]
   },
   MONGODB: {
     URI: 'mongodb://127.0.0.1/koapi',
