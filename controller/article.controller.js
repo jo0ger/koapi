@@ -26,7 +26,7 @@ articleCtrl.list.GET = async (ctx, next) => {
       { path: 'category', select: 'name description extends' },
       { path: 'tag', select: 'name description extends' }
     ],
-    select: '-content' // 文章列表不需要content
+    select: '-content -rendered_content' // 文章列表不需要content
   }
 
   // 文章查询条件
@@ -110,9 +110,9 @@ articleCtrl.list.GET = async (ctx, next) => {
   }
 
   // 如果未通过权限校验，将文章状态重置为1
-  if (!await authIsVerified(ctx)) {
-    query.state = 1
-  }
+  // if (!await authIsVerified(ctx)) {
+  //   query.state = 1
+  // }
 
   await ArticleModel.paginate(query, options)
     .then(articles => {
@@ -157,7 +157,7 @@ articleCtrl.list.POST = async (ctx, next) => {
     })
 }
 
-// 批量修改文章（移入回收站，移出回收站）
+// 批量修改文章（回收站，草稿箱，发布）
 articleCtrl.list.PATCH = async (ctx, next) => {
   let { article_ids, state } = ctx.request.body
   if (!article_ids || !article_ids.length) {
@@ -278,6 +278,30 @@ articleCtrl.item.PUT = async (ctx, next) => {
       handleError({ ctx, err, message: '修改文章失败' })
     })
 }
+
+// 修改单篇文章
+articleCtrl.item.PATCH = async (ctx, next) => {
+  let { id } = ctx.params
+  let { state } = ctx.request.body
+  if (!isObjectId(id)) {
+    return handleError({ ctx, message: '缺少文章id' })
+  }
+
+  if (![-1, 0, 1, '-1', '0', '1'].includes(state)) {
+    return handleError({ ctx, message: '文章状态不对' })
+  }
+
+  await ArticleModel.findByIdAndUpdate(id, { state }, { new: true })
+    .populate({ path: 'category', select: 'name description extends' })
+    .populate({ path: 'tag', select: 'name description extends' })
+    .exec()
+    .then(data => {
+      handleSuccess({ ctx, data, message: '操作成功' })
+    })
+    .catch(err => {
+      handleError({ ctx, err, message: '操作失败' })
+    })
+} 
 
 // 删除单篇文章
 articleCtrl.item.DELETE = async (ctx, next) => {
