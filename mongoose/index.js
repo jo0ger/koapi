@@ -7,7 +7,7 @@ const mongoosePaginate = require('mongoose-paginate')
 const md5 = require('md5')
 const config = require('../config')
 mongoose.Promise = global.Promise
-const { AuthModel } = require('../model')
+const { AuthModel, CategoryModel } = require('../model')
 
 const db = {
   init () {
@@ -32,6 +32,10 @@ const db = {
     return this
   },
   hook () {
+    this._adminHook()
+        ._blogHook()
+  },
+  _adminHook () {
     AuthModel.findOne({}).then(admin => {
       if (!admin) {
         try {
@@ -51,6 +55,21 @@ const db = {
         logger.info(`管理员：${admin.name}`)
       }
     })
+    return this
+  },
+  _blogHook () {
+    // 初始化分类
+    const defaultCategory = config.BLOG.DEFAULT_CATEGORY
+
+    defaultCategory.forEach(({ name, description }) => {
+      CategoryModel.findOne({ name }).then(category => {
+        if (!category) {
+          new CategoryModel({ name, description }).save()
+        }
+      })
+    })
+    
+    return this
   }
 }
 
