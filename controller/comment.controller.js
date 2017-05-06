@@ -17,7 +17,8 @@ const commentCtrl = { list: {}, item: {} }
 // 当state = 1时，获取
 commentCtrl.list.GET = async (ctx, next) => {
   // sort 排序 0 时间倒序 1 时间正序 2 点赞数倒序
-  let { page, page_size, state, keyword, page_id, sort = 1, start_date, end_date } = ctx.query
+  // type 评论获取方式 0 平铺 1 盖楼
+  let { page, page_size, state, keyword, page_id, sort = 0, start_date, end_date, type = 0 } = ctx.query
 
   const isVerified = await authIsVerified(ctx)
 
@@ -37,7 +38,7 @@ commentCtrl.list.GET = async (ctx, next) => {
 
   // 评论查询条件，先查询父级评论
   let query = {
-    parent_id: { $exists: false }
+    // parent_id: { $exists: false }
   }
 
   if (page_id) {
@@ -92,27 +93,31 @@ commentCtrl.list.GET = async (ctx, next) => {
   let parentComments = parents.docs
   let total = parentComments.length
 
-  let childComments = []
-  for (let i = 0; i < parentComments.length; i++) {
-    let parent = parentComments[i]
-    childComments = await CommentModel.find({
-      parent_id: parent._id
-    })
-    .sort('-create_at')
-    .exec()
-    .catch(err => {
-      handleError({ ctx, err, message: '评论列表获取失败' })
-    })
-    childComments = childComments.map(child => {
-      child = child.toObject()
-      if (child.state !== 1 && !isVerified) {
-        delete child.content
-        delete child.rendered_content
-      }
-      return child
-    })
-    total += childComments.length
-    parent.children = childComments
+  // type===1时，盖楼模式
+  if (type === 1) {
+    // 迭代子评论
+    let childComments = []
+    for (let i = 0; i < parentComments.length; i++) {
+      let parent = parentComments[i]
+      childComments = await CommentModel.find({
+        parent_id: parent._id
+      })
+      .sort('-create_at')
+      .exec()
+      .catch(err => {
+        handleError({ ctx, err, message: '评论列表获取失败' })
+      })
+      childComments = childComments.map(child => {
+        child = child.toObject()
+        if (child.state !== 1 && !isVerified) {
+          delete child.content
+          delete child.rendered_content
+        }
+        return child
+      })
+      total += childComments.length
+      parent.children = childComments
+    }
   }
   
   handleSuccess({
@@ -131,63 +136,65 @@ commentCtrl.list.GET = async (ctx, next) => {
 }
 
 // 发布评论
-commentCtrl.list.POST = async (ctx, next) => {
-  let req = ctx.request
-  let comment = req.body
-  let { content, author = {}, type, page_id, parent_id, forward_id } = comment
-  let { name, email, site } = author
+  commentCtrl.list.POST = async (ctx, next) => {
+    let req = ctx.request
+    let comment = req.body
+    let { content, author = {}, type, page_id, parent_id, forward_id } = comment
+    if (typeof author === 'string') {
+      author = JSON.parse(author)
+      comment.author = author
+    }
+    let { name, email, site } = author
 
-  // 校验
-  if (![0, 1, '0', '1'].includes(type) || !page_id) {
-    return handleError({ ctx, message: '少侠，您在哪个页面评论的？' })
-  }
-  if (!content) {
-    return handleError({ ctx, message: '少侠，留下您的回复' })
-  }
-  if (!name || !email) {
-    return handleError({ ctx, message: '少侠，报上姓名和邮箱' })
-  } else if (!isEmail(email)) {
-    return handleError({ ctx, message: '少侠，您的邮箱格式错了' })
-  }
+    // 校验
+    if (![0, 1, '0', '1'].includes(type) || !page_id) {
+      return handleError({ ctx, message: '少侠，您在哪个页面评论的？' })
+    }
+    if (!content) {
+      return handleError({ ctx, message: '少侠，留下您的回复' })
+    }
+    if (!name || !email) {
+      return handleError({ ctx, message: '少侠，报上姓名和邮箱' })
+    } else if (!isEmail(email)) {
+      return handleError({ ctx, message: '少侠，您的邮箱格式错了' })
+    }
 
-  // 获取ip
-  const ip = (ctx.req.headers['x-forwarded-for'] || 
-              ctx.req.headers['x-real-ip'] || 
-              ctx.req.connection.remoteAddress || 
-              ctx.req.socket.remoteAddress ||
-              ctx.req.connection.socket.remoteAddress ||
-              ctx.req.ip ||
-              ctx.req.ips[0]).replace('::ffff:', '')
-  // const ip_location = geoip.lookup(ip)
-  const ip_location = 'Beijing'
-  console.log(ip);
-  console.log(ip_location);
-  comment.meta = comment.meta || {}
-  if (ip_location) {
-    comment.meta.ip_location = ip_location
-  }
-  comment.meta.ip = ip
-  comment.meta.agent = req.headers['user-agent'] || comment.agent
-  comment.rendered_content = marked(content)
-  if (parent_id && !forward_id) {
-    comment.forward_id = parent_id
-  } else if (forward_id && !parent_id) {
-    comment.parent_id = forward_id
-  }
+    // 获取ip
+    const ip = (ctx.req.headers['x-forwarded-for'] || 
+                ctx.req.headers['x-real-ip'] || 
+                ctx.req.connection.remoteAddress || 
+                ctx.req.socket.remoteAddress ||
+                ctx.req.connection.socket.remoteAddress ||
+                ctx.req.ip ||
+                ctx.req.ips[0]).replace('::ffff:', '')
+    // const ip_location = geoip.lookup(ip)
+    const ip_location = 'Beijing'
+    comment.meta = comment.meta || {}
+    if (ip_location) {
+      comment.meta.ip_location = ip_location
+    }
+    comment.meta.ip = ip
+    comment.meta.agent = req.headers['user-agent'] || comment.agent
+    comment.rendered_content = marked(content)
+    if (parent_id && !forward_id) {
+      comment.forward_id = parent_id
+    } else if (forward_id && !parent_id) {
+      comment.parent_id = forward_id
+    }
 
-  let data = await new CommentModel(comment)
-    .save()
-    .catch(err => {
-      handleError({ ctx, err, message: '评论发布失败'})
-    })
-  if (data) {
-    handleSuccess({ ctx, data, message: '评论发布成功' })
+    let data = await new CommentModel(comment)
+      .save()
+      .catch(err => {
+        handleError({ ctx, err, message: '评论发布失败'})
+      })
+    if (data) {
+      handleSuccess({ ctx, data, message: '评论发布成功' })
+    }
+    if (data && data.type === 0 && data.page_id) {
+      // 如果是文章评论，则更新文章评论数量
+      await updateArticleCommentCount([comment.page_id])
+    }
   }
-  if (data && data.type === 0 && data.page_id) {
-    // 如果是文章评论，则更新文章评论数量
-    await updateArticleCommentCount([comment.page_id])
-  }
-}
 
 // 批量修改state
 commentCtrl.list.PATCH = async (ctx, next) => {
