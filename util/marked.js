@@ -28,10 +28,25 @@ highlight.registerLanguage('stylus', require('highlight.js/lib/languages/stylus'
 highlight.configure({
   classPrefix: ''     // don't append class prefix
 })
+
 let renderer = new marked.Renderer()
+
 renderer.heading = function (text, level) {
   return `<h${level} id="${generateId()}">${text}</h${level}>`
 }
+
+renderer.link = (href, title, text) => {
+  const isOrigin = href.indexOf('jooger.me') > -1
+  const textIsImage = /(<img.*?)>/gi.test(text)
+  return `
+    <a href=${href}
+    target="_blank"
+    class="${textIsImage ? 'img-link' : 'link'}"
+    title="${title || ''}"
+    ${isOrigin ? '' : 'rel="external nofollow"'}>${text}</a>
+  `
+}
+
 marked.setOptions({
   renderer,
   gfm: true,
@@ -41,7 +56,7 @@ marked.setOptions({
   breaks: true,
   smartLists: true,
   smartypants: true,
-  highlight: function (code, lang) {
+  highlight (code, lang) {
     if (!~languages.indexOf(lang)) {
       return highlight.highlightAuto(code).value
     }

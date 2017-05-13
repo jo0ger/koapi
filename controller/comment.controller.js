@@ -165,7 +165,7 @@ commentCtrl.list.GET = async (ctx, next) => {
 commentCtrl.list.POST = async (ctx, next) => {
   let req = ctx.request
   let comment = req.body
-  let { content, author = {}, type, page_id, parent_id, forward_id } = comment
+  let { content, author = {}, type, page_id, parent, forward } = comment
   if (typeof author === 'string') {
     author = JSON.parse(author)
     comment.author = author
@@ -202,10 +202,10 @@ commentCtrl.list.POST = async (ctx, next) => {
   comment.meta.ip = ip
   comment.meta.agent = req.headers['user-agent'] || comment.agent
   comment.rendered_content = marked(content)
-  if (parent_id && !forward_id) {
-    comment.forward_id = parent_id
-  } else if (forward_id && !parent_id) {
-    comment.parent_id = forward_id
+  if (parent && !forward) {
+    comment.forward = parent
+  } else if (forward && !parent) {
+    comment.parent = forward
   }
 
   let data = await new CommentModel(comment)
