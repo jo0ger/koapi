@@ -17,7 +17,7 @@ likeCtrl.POST = async (ctx, next) => {
     return handleError({ ctx, message: '少侠，请输入id' })
   }
   if (![0, 1, '0', '1'].includes(type)) {
-    return handleError({ ctx, message: '少侠，请输入type' })
+    return handleError({ ctx, message: '少侠，请输入评论类型' })
   }
 
   let isArticle = type == 0

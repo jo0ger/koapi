@@ -29,7 +29,7 @@ articleCtrl.list.GET = async (ctx, next) => {
       { path: 'category', select: 'name description extends' },
       { path: 'tag', select: 'name description extends' }
     ],
-    select: '-content' // 文章列表不需要content
+    select: '-content -rendered_content' // 文章列表不需要content
   }
 
   // 文章查询条件
@@ -167,7 +167,7 @@ articleCtrl.list.POST = async (ctx, next) => {
     })
 }
 
-// 批量修改文章（移入回收站，移出回收站）
+// 批量修改文章（回收站，草稿箱，发布）
 articleCtrl.list.PATCH = async (ctx, next) => {
   let { article_ids, state } = ctx.request.body
   if (!article_ids || !article_ids.length) {
@@ -213,7 +213,7 @@ articleCtrl.item.GET = async (ctx, next) => {
     if (data && data.tag && data.tag.length) {
       data.related = []
       await ArticleModel.find({ _id: { $nin: [ data._id ] }, state: 1, tag: { $in: data.tag.map(t => t._id) }})
-        .select('id title excerpt thumb create_at')
+        .select('id title thumbs create_at meta')
         .exec()
         .then(articles => {
           data.related = articles
@@ -233,12 +233,12 @@ articleCtrl.item.GET = async (ctx, next) => {
         query.state = 1
       }
       let prev = await ArticleModel.findOne(query)
-        .select('title create_at')
+        .select('title create_at thumbs')
         .sort('-create_at')
         .lt('create_at', data.create_at)
         .exec()
       let next = await ArticleModel.findOne(query)
-        .select('title create_at')
+        .select('title create_at thumbs')
         .sort('create_at')
         .gt('create_at', data.create_at)
         .exec()
@@ -288,6 +288,30 @@ articleCtrl.item.PUT = async (ctx, next) => {
       handleError({ ctx, err, message: '修改文章失败' })
     })
 }
+
+// 修改单篇文章
+articleCtrl.item.PATCH = async (ctx, next) => {
+  let { id } = ctx.params
+  let { state } = ctx.request.body
+  if (!isObjectId(id)) {
+    return handleError({ ctx, message: '缺少文章id' })
+  }
+
+  if (![-1, 0, 1, '-1', '0', '1'].includes(state)) {
+    return handleError({ ctx, message: '文章状态不对' })
+  }
+
+  await ArticleModel.findByIdAndUpdate(id, { state }, { new: true })
+    .populate({ path: 'category', select: 'name description extends' })
+    .populate({ path: 'tag', select: 'name description extends' })
+    .exec()
+    .then(data => {
+      handleSuccess({ ctx, data, message: '操作成功' })
+    })
+    .catch(err => {
+      handleError({ ctx, err, message: '操作失败' })
+    })
+} 
 
 // 删除单篇文章
 articleCtrl.item.DELETE = async (ctx, next) => {
