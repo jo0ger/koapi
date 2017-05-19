@@ -208,6 +208,9 @@ articleCtrl.item.GET = async (ctx, next) => {
   if (!isObjectId(id)) {
     return handleError({ ctx, message: '缺少文章id' })
   }
+
+  const isVerified = await authIsVerified(ctx)
+
   // 获取相关文章
   const getRelatedArticles = async (data) => {
     if (data && data.tag && data.tag.length) {
@@ -229,7 +232,7 @@ articleCtrl.item.GET = async (ctx, next) => {
     if (data && data._id) {
       let query = {}
       // 如果未通过权限校验，将文章状态重置为1
-      if (!await authIsVerified(ctx)) {
+      if (!isVerified) {
         query.state = 1
       }
       let prev = await ArticleModel.findOne(query)
@@ -248,18 +251,29 @@ articleCtrl.item.GET = async (ctx, next) => {
     }
   }
 
-  let data = await ArticleModel.findByIdAndUpdate(id, { $inc: { 'meta.visit': 1 } }, { new: true })
-    .select('-content') // 不返回content
-    .populate('category tag')
-    .exec()
-    .catch(err => {
-      handhandleError({ ctx, err, message: '文章详情获取失败' })
-    })
-  if (data) {
-    data = data.toObject()
+  let data = null
+
+  if (!isVerified) {
+    data = await ArticleModel.findByIdAndUpdate(id, { $inc: { 'meta.visit': 1 } }, { new: true })
+      .select('-content') // 不返回content
+      .populate('category tag')
+      .exec()
+      .catch(err => handhandleError({ ctx, err, message: '文章详情获取失败' }))
+    if (data) {
+      data = data.toObject()
+    }
+    await getRelatedArticles(data)
+    await getSiblingArticles(data)
+  } else {
+    data = await ArticleModel.findById(id)
+      .populate('category tag')
+      .exec()
+      .catch(err => handhandleError({ ctx, err, message: '文章详情获取失败' }))
+    if (data) {
+      data = data.toObject()
+    }
   }
-  await getRelatedArticles(data)
-  await getSiblingArticles(data)
+
   handleSuccess({ ctx, data, message: '文章详情获取成功' })    
   
 }
