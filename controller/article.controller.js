@@ -6,7 +6,8 @@ const mongoose = require('mongoose')
 const { 
   handle: { handleRequest, handleSuccess, handleError },
   validate: { isObjectId },
-  marked
+  marked,
+  createObjectId
 } = require('../util')
 const config = require('../config')
 const { ArticleModel, CategoryModel, TagModel } = require('../model')
@@ -74,9 +75,7 @@ articleCtrl.list.GET = async (ctx, next) => {
       // 普通字符串，需要先查到id
       await CategoryModel.findOne({ name: category }).exec()
         .then(c => {
-          if (c) {
-            query.category = c._id
-          }
+          query.category = c && c._id || createObjectId()
         })
         .catch(err => {
           handleError({ ctx, message: '分类查找失败', err })
@@ -93,9 +92,7 @@ articleCtrl.list.GET = async (ctx, next) => {
       // 普通字符串，需要先查到id
       await TagModel.findOne({ name: tag }).exec()
         .then(t => {
-          if (t) {
-            query.tag = t._id
-          }
+          query.tag = t && t._id || createObjectId()
         })
         .catch(err => {
           handleError({ ctx, message: '标签查找失败', err })
@@ -189,16 +186,20 @@ articleCtrl.list.PATCH = async (ctx, next) => {
 
 // 批量删除文章
 articleCtrl.list.DELETE = async (ctx, next) => {
-  let { article_ids } = ctx.request.body
+  const { article_ids } = ctx.request.body
+  let text = '批量'
   if (!article_ids || !article_ids.length) {
     return handleError({ ctx, message: '未选中文章' })
   }
+  if (article_ids.length === 1) {
+    text = ''
+  }
   await ArticleModel.remove({ _id: { $in: article_ids } }).exec()
     .then(data => {
-      handleSuccess({ ctx, data, message: '文章批量删除成功' })
+      handleSuccess({ ctx, data, message: `文章${text}删除成功` })
     })
     .catch(err => {
-      handleError({ ctx, err, message: '文章批量删除失败' })
+      handleError({ ctx, err, message: `文章${text}删除失败` })
     })
 }
 
