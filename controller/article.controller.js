@@ -155,6 +155,15 @@ articleCtrl.list.POST = async (ctx, next) => {
 
   article.rendered_content = marked(content)
 
+  // 由于cms输入限制，category和tag只能传过来name，不能传_id
+  const _c = await CategoryModel.findOne({ name: article.name }).exec()
+  if (_c && _c._id) {
+    article.category = _c._id
+  }
+  
+  const _ts = await TagModel.find({ name: { $in: article.tag} }).exec()
+  article.tag = _ts.map(item => item._id)
+
   await new ArticleModel(article).save()
     .then(data => {
       handleSuccess({ ctx, data, message: '发布文章成功' })
