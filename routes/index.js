@@ -32,14 +32,14 @@ module.exports = router => {
     }
 
     // 权限校验，排除所有非管理员的非GET请求，comment接口的POST请求除外，（前台需要评论）
-    // if (!await authIsVerified(ctx) && request.method !== 'GET' && !(request.url.includes('comment') && request.method === ‘POST’)) {
-    //   logger.error('权限校验失败')
-    //   ctx.send(UNAUTHORIZED, {
-    //     code: UNAUTHORIZED,
-    //     message: '禁地勿闯！！！'
-    //   })
-    //   return
-    // }
+    if (!await authIsVerified(ctx) && request.method !== 'GET' && !(request.url.includes('comment') && request.method === 'POST')) {
+      logger.error('权限校验失败')
+      ctx.send(UNAUTHORIZED, {
+        code: UNAUTHORIZED,
+        message: '禁地勿闯！！！'
+      })
+      return
+    }
 
     return next()
   })

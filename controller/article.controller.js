@@ -20,7 +20,7 @@ articleCtrl.list.GET = async (ctx, next) => {
   // sort => meta.likes: -1 || ...    方便后台列表排序
   // hot => meta.comments: -1 && meta.likes: -1 && meta.visit: -1
   let { page, page_size, state, keyword, category, tag, start_date, end_date, hot, sort } = ctx.query
-  
+
   // 过滤条件
   const options = {
     sort: { create_at: -1 },
@@ -63,7 +63,7 @@ articleCtrl.list.GET = async (ctx, next) => {
   } else if (!!sort) {
     // sort
     options.sort = typeof sort === 'string' ? JSON.parse(sort) : sort
-    options.sort.create_at = -1
+    options.sort.create_at = options.sort.create_at || -1
   }
 
   // 分类查询
@@ -117,9 +117,9 @@ articleCtrl.list.GET = async (ctx, next) => {
   }
 
   // 如果未通过权限校验，将文章状态重置为1
-  // if (!await authIsVerified(ctx)) {
-  //   query.state = 1
-  // }
+  if (!await authIsVerified(ctx)) {
+    query.state = 1
+  }
 
   await ArticleModel.paginate(query, options)
     .then(articles => {
@@ -183,13 +183,20 @@ articleCtrl.list.PATCH = async (ctx, next) => {
   if ([-1, 0, 1, '-1', '0', '1'].includes(state)) {
     update.state = Number(state)
   }
+  const action = state === 1
+    ? '发布'
+    : state === 0
+      ? '转移草稿箱'
+      : state === -1
+       ? '转移回收站'
+       : '操作'
   await ArticleModel.update({ _id: { $in: article_ids }}, { $set: update }, { multi: true })
     .exec()
     .then(data => {
-      handleSuccess({ ctx, data: {}, message: '操作成功'})
+      handleSuccess({ ctx, data: {}, message: `${action}成功`})
     })
     .catch(err => {
-      handleError({ ctx, err, message: '操作失败' })
+      handleError({ ctx, err, message: `${action}失败` })
     })
 }
 

@@ -24,8 +24,9 @@ module.exports = async (ctx) => {
   const { request } = ctx
   const _DEV_ = request.query._DEV_ || request.body._DEV_ || false
   
-  // 如果请求时query或者body上加上_DEV_，则全部权限都通过
-  if (_DEV_) {
+  // 如果请求时query或者body上加上_DEV_，并且是开发环境，则全部权限都通过
+  // 生产环境下则无此限制，主要是为了开发方便
+  if (_DEV_ && process.env.NODE_ENV === 'development') {
     return true
   }
 
