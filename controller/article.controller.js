@@ -130,7 +130,7 @@ articleCtrl.list.GET = async (ctx, next) => {
           list: articles.docs,
           pagination: {
             total: articles.total,
-            current_page: articles.page,
+            current_page: articles.page > articles.pages ? articles.pages : articles.page,
             total_page: articles.pages,
             per_page: articles.limit
           }
