@@ -142,7 +142,7 @@ articleCtrl.list.GET = async (ctx, next) => {
     })
 }
 
-// 发布新文章
+// 发布新文章 || 新草稿
 articleCtrl.list.POST = async (ctx, next) => {
   let article = ctx.request.body
   let { title, content } = article
@@ -156,20 +156,36 @@ articleCtrl.list.POST = async (ctx, next) => {
   article.rendered_content = marked(content)
 
   // 由于cms输入限制，category和tag只能传过来name，不能传_id
-  const _c = await CategoryModel.findOne({ name: article.name }).exec()
-  if (_c && _c._id) {
-    article.category = _c._id
-  }
+  // const _c = await CategoryModel.findOne({ name: article.category }).exec()
+  // if (_c && _c._id) {
+  //   article.category = _c._id
+  // } else {
+  //   delete article.category
+  // }
   
-  const _ts = await TagModel.find({ name: { $in: article.tag} }).exec()
-  article.tag = _ts.map(item => item._id)
+  // const _ts = await TagModel.find({ name: { $in: article.tag} }).exec()
+  // if (_ts && _ts.length) {
+  //   article.tag = _ts.map(item => item._id)
+  // } else {
+  //   delete article.tag
+  // }
+
+  if (!article.category || !isObjectId(article.category)) {
+    delete article.category
+  }
+
+  const action = article.state === 1
+    ? '发布文章'
+    : article.state === 0
+      ? '新建草稿'
+      : '新建'
 
   await new ArticleModel(article).save()
     .then(data => {
-      handleSuccess({ ctx, data, message: '发布文章成功' })
+      handleSuccess({ ctx, data, message: `${action}成功` })
     })
     .catch(err => {
-      handleError({ ctx, err, message: '发布文章失败' })
+      handleError({ ctx, err, message: `${action}失败` })
     })
 }
 
@@ -310,7 +326,14 @@ articleCtrl.item.PUT = async (ctx, next) => {
     return handleError({ ctx, message: '缺少文章内容' })
   }
   article.rendered_content = marked(content)
+
+  if (!article.category || !isObjectId(article.category)) {
+    delete article.category
+  }
+
   await ArticleModel.findByIdAndUpdate(id, article, { new: true })
+    .populate({ path: 'category', select: 'name description extends' })
+    .populate({ path: 'tag', select: 'name description extends' })
     .exec()
     .then(data => {
       handleSuccess({ ctx, data, message: '修改文章成功' })
