@@ -14,9 +14,8 @@ const articleSchema = new mongoose.Schema({
   excerpt: String,
   content: { type: String, required: true, validate: /\S+/ },
   rendered_content: { type: String, required: true, validate: /\S+/ },
-  // 缩略图，enable 是否显示，url 缩略图url，full 是否突屏
-  // thumb: { enable: { type: Boolean, default: false }, url: String, full: { type: Boolean, default: false } },
-  thumbs: [{ name: String, url: String }],
+  // 缩略图
+  thumbs: [{ uid: String, name: String, url: String, size: Number }],
   // 文章状态 => -1 回收站  0 草稿  1 已发布
   state: { type: Number, default: 0 },
   create_at: { type: Date, default: Date.now },

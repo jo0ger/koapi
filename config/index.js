@@ -45,8 +45,8 @@ module.exports = {
   QINIU: {
     accessKey: 'yvmsQiG7qdCesWCii3nMEMHK-8Ifi7EyRlcY1FmK',
     secretKey: 'G8pkqYNw9OFxcGUvwL_Gia7b_bhV_5ejMxsNZENl',
-    bucket: 'koapi',
-    origin: 'http://koapi.u.qiniudn.com',
-    uploadURL: 'http://up.qiniu.com/'
+    bucket: 'jooger',
+    domain: 'http://oqtnezwt7.bkt.clouddn.com',
+    uploadUrl: 'http://up-z1.qiniu.com/'
   }
 }
