@@ -27,8 +27,8 @@ module.exports = {
     COMMENT_LIMIT: 99,
     DATE_FORMAT: 'yyyy-MM-dd',
     DEFAULT_CATEGORY: [
-      { name: 'CODE', description: 'CODE' },
-      { name: 'THINK', description: 'THINK' }
+      { name: 'CODE', description: 'CODE', extends: [{ color: '#108ee9'}] },
+      { name: 'THINK', description: 'THINK', extends: [{ color: '#108ee9'}] }
     ]
   },
   MONGODB: {

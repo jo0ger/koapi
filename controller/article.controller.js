@@ -29,8 +29,7 @@ articleCtrl.list.GET = async (ctx, next) => {
     populate: [
       { path: 'category', select: 'name description extends' },
       { path: 'tag', select: 'name description extends' }
-    ],
-    select: '-content -rendered_content' // 文章列表不需要content
+    ]
   }
 
   // 文章查询条件
@@ -119,6 +118,7 @@ articleCtrl.list.GET = async (ctx, next) => {
   // 如果未通过权限校验，将文章状态重置为1
   if (!await authIsVerified(ctx)) {
     query.state = 1
+    options.select = '-content -rendered_content' // 文章列表不需要content
   }
 
   await ArticleModel.paginate(query, options)
