@@ -5,14 +5,23 @@
 const mongoose = require('mongoose')
 const { 
   handle: { handleRequest, handleSuccess, handleError },
-  validate: { isObjectId },
+  validate: { isObjectId, isType },
   marked,
   createObjectId
 } = require('../util')
 const config = require('../config')
-const { ArticleModel, CategoryModel, TagModel } = require('../model')
+const { ArticleModel, CategoryModel, TagModel, CommentModel } = require('../model')
 const authIsVerified = require('../middleware/auth')
 const articleCtrl = { list: {}, item: {} }
+
+// 根据文章ID删除评论
+async function deleteCommentByArticleId (id) {
+  if (!id) {
+    return
+  }
+  // 批量/单篇删除文章的时候删除评论
+  await CommentModel.remove({ page_id: isType(id, 'array') ? { $in: id } : id }).exec()
+}
 
 // 获取文章列表
 articleCtrl.list.GET = async (ctx, next) => {
@@ -227,7 +236,9 @@ articleCtrl.list.DELETE = async (ctx, next) => {
     text = ''
   }
   await ArticleModel.remove({ _id: { $in: article_ids } }).exec()
-    .then(data => {
+    .then(async data => {
+      // 删除相关评论
+      await deleteCommentByArticleId(article_ids)
       handleSuccess({ ctx, data, message: `文章${text}删除成功` })
     })
     .catch(err => {
@@ -373,9 +384,11 @@ articleCtrl.item.DELETE = async (ctx, next) => {
   if (!isObjectId(id)) {
     return handleError({ ctx, message: '缺少文章id' })
   }
-  await ArticleModel.findByIdAndRemove(id).exec()
-    .then(data => {
-      handleSuccess({ ctx, data, message: '删除文章成功' })
+
+  await ArticleModel.remove({ _id: id }).exec()
+    .then(async data => {
+      await deleteCommentByArticleId(id)
+      handleSuccess({ ctx, message: '删除文章成功' })
     })
     .catch(err => {
       handleError({ ctx, err, message: '删除文章失败' })

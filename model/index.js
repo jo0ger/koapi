@@ -4,6 +4,7 @@
 
 const fs = require('fs')
 const mongoose = require('mongoose')
+const { firstUpperCase } = require('../util')
 const files = fs.readdirSync(__dirname)
 let models = {}
 
@@ -35,11 +36,6 @@ function buildSchema (schema) {
 function updateHook (next) {
   this.findOneAndUpdate({}, { update_at: Date.now() })
   next && next()
-}
-
-// 首字母大写
-function firstUpperCase (str) {
-  return str.toLowerCase().replace(/( |^)[a-z]/g, (L) => L.toUpperCase());
 }
 
 export default models

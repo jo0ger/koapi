@@ -46,7 +46,7 @@ module.exports = {
     accessKey: 'yvmsQiG7qdCesWCii3nMEMHK-8Ifi7EyRlcY1FmK',
     secretKey: 'G8pkqYNw9OFxcGUvwL_Gia7b_bhV_5ejMxsNZENl',
     bucket: 'jooger',
-    domain: 'http://oqtnezwt7.bkt.clouddn.com',
+    origin: 'http://oqtnezwt7.bkt.clouddn.com',  // domain
     uploadUrl: 'http://up-z1.qiniu.com/'
   }
 }

@@ -1,5 +1,5 @@
 /**
- * 七牛获取token
+ * 七牛获取上传配置
  */
 
 const qiniu = require('qn')
@@ -13,7 +13,10 @@ qiniuCtrl.GET = async (ctx, next) => {
     ctx,
     message: '获取七牛uptoken成功',
     data: {
-      uptoken: client.uploadToken()
+      uptoken: client.uploadToken(),
+      bucket: QINIU.bucket,
+      domain: QINIU.origin,
+      uploadUrl: QINIU.uploadUrl
     }
   })
 }

@@ -31,8 +31,8 @@ module.exports = router => {
       return next()
     }
 
-    // 权限校验，排除所有非管理员的非GET请求，comment接口的POST请求除外，（前台需要评论）
-    if (!await authIsVerified(ctx) && request.method !== 'GET' && !(request.url.includes('comment') && request.method === 'POST')) {
+    // 权限校验，排除所有非管理员的非GET请求，comment和like接口的POST请求除外，（前台需要评论）
+    if (!await authIsVerified(ctx) && request.method !== 'GET' && !((request.url.includes('comment') || request.url.includes('like')) && request.method === 'POST')) {
       logger.error('权限校验失败')
       ctx.send(UNAUTHORIZED, {
         code: UNAUTHORIZED,
@@ -44,7 +44,7 @@ module.exports = router => {
     return next()
   })
 
-  // Qiniu uptoken
+  // Qiniu upload config
   router.all('/qiniu', controllers.qiniu)
 
   // Auth
