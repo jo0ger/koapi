@@ -214,6 +214,12 @@ commentCtrl.list.POST = async (ctx, next) => {
       handleError({ ctx, err, message: '评论发布失败'})
     })
   if (data) {
+    data = await CommentModel.findById(data._id)
+      .select('-type -page_id')
+      .populate({ path: 'forward', select: 'author.name' })
+      .exec().catch(err => {
+        handleError({ ctx, err, message: '评论发布失败'})
+      })
     handleSuccess({ ctx, data, message: '评论发布成功' })
   }
   if (data && data.type === 0 && data.page_id) {
