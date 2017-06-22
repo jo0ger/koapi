@@ -213,7 +213,13 @@ commentCtrl.list.POST = async (ctx, next) => {
     .catch(err => {
       handleError({ ctx, err, message: '评论发布失败'})
     })
+
   if (data) {
+    if (data.type === 0 && data.page_id) {
+      // 如果是文章评论，则更新文章评论数量
+      await updateArticleCommentCount([comment.page_id])
+    }
+
     data = await CommentModel.findById(data._id)
       .select('-type -page_id')
       .populate({ path: 'forward', select: 'author.name' })
@@ -221,10 +227,6 @@ commentCtrl.list.POST = async (ctx, next) => {
         handleError({ ctx, err, message: '评论发布失败'})
       })
     handleSuccess({ ctx, data, message: '评论发布成功' })
-  }
-  if (data && data.type === 0 && data.page_id) {
-    // 如果是文章评论，则更新文章评论数量
-    await updateArticleCommentCount([comment.page_id])
   }
 }
 
