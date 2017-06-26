@@ -13,7 +13,7 @@ module.exports = router => {
     let { request, response } = ctx
     const allowedOrigins = ['http://bubblypoker.com', 'http://admin.bubblypoker.com']
     const origin = request.get('origin') || ''
-    if (allowedOrigins.includes(origin) || origin.includes('localhost')) {
+    if (allowedOrigins.includes(origin) || origin.includes('localhost') || request.query._DEV_) {
       response.set('Access-Control-Allow-Origin', origin)
     }
     response.set("Access-Control-Allow-Headers", "Authorization, Origin, No-Cache, X-Requested-With, If-Modified-Since, Pragma, Last-Modified, Cache-Control, Expires, Content-Type, X-E4M-With")
