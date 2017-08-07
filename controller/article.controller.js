@@ -27,7 +27,7 @@ async function deleteCommentByArticleId (id) {
 articleCtrl.list.GET = async (ctx, next) => {
   // state => -1 || 0 || 1
   // sort => meta.likes: -1 || ...    方便后台列表排序
-  // hot => meta.comments: -1 && meta.likes: -1 && meta.visit: -1
+  // hot => meta.comments: -1 && meta.likes: -1 && meta.pvs: -1
   let { page, page_size, state, keyword, category, tag, start_date, end_date, hot, sort } = ctx.query
 
   // 过滤条件
@@ -64,7 +64,7 @@ articleCtrl.list.GET = async (ctx, next) => {
     options.sort = {
       'meta.comments': -1,
       'meta.likes': -1,
-      'meta.visit': -1,
+      'meta.pvs': -1,
       create_at: -1
     }
     options.select = 'title create_at meta tag thumb'
@@ -127,7 +127,7 @@ articleCtrl.list.GET = async (ctx, next) => {
   // 如果未通过权限校验，将文章状态重置为1
   if (!await authIsVerified(ctx)) {
     query.state = 1
-    options.select = '-content -rendered_content' // 文章列表不需要content
+    options.select = '-content -rendered_content -state' // 文章列表不需要content和state
   }
 
   await ArticleModel.paginate(query, options)
@@ -298,7 +298,7 @@ articleCtrl.item.GET = async (ctx, next) => {
   let data = null
 
   if (!isVerified) {
-    data = await ArticleModel.findByIdAndUpdate(id, { $inc: { 'meta.visit': 1 } }, { new: true })
+    data = await ArticleModel.findByIdAndUpdate(id, { $inc: { 'meta.pvs': 1 } }, { new: true })
       .select('-content') // 不返回content
       .populate('category tag')
       .exec()

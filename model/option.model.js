@@ -3,11 +3,8 @@
  */
 
 const mongoose = require('mongoose')
-const autoIncrement = require('mongoose-auto-increment')
 const mongoosePaginate = require('mongoose-paginate')
 const config = require('../config')
-
-autoIncrement.initialize(mongoose.connection)
 
 const optionSchema = new mongoose.Schema({
   // ============================

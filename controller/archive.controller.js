@@ -33,7 +33,7 @@ archivesCtrl.GET = async (ctx, next) => {
       title: 1,
       excerpt: 1,
       create_at: 1,
-      'meta.visit': 1,
+      'meta.pvs': 1,
       'meta.comments': 1,
       'meta.likes': 1,
       category: 1,
@@ -49,7 +49,7 @@ archivesCtrl.GET = async (ctx, next) => {
           excerpt: '$excerpt',
           create_at: '$create_at',
           meta: {
-            visit: '$meta.visit',
+            pvs: '$meta.pvs',
             likes: '$meta.likes',
             comments: '$meta.comments'
           },

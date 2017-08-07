@@ -3,10 +3,7 @@
  */
 
 const mongoose = require('mongoose')
-const autoIncrement = require('mongoose-auto-increment')
 const mongoosePaginate = require('mongoose-paginate')
-
-autoIncrement.initialize(mongoose.connection)
 
 const commentSchema = new mongoose.Schema({
   // 评论通用项
@@ -42,11 +39,5 @@ const commentSchema = new mongoose.Schema({
 })
 
 commentSchema.plugin(mongoosePaginate)
-commentSchema.plugin(autoIncrement.plugin, {
-  model: 'Comment',
-  field: 'id',
-  startAt: 1,
-  incrementBy: 1
-})
 
 export default commentSchema
