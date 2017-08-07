@@ -1,6 +1,6 @@
 # koapi
 
-My blog's api server build by koa, mongodb and mongoose
+My blog's api server build by koa2 and mongoose
 
 ## 目录结构
 
@@ -27,7 +27,7 @@ koapi
 │      
 ├─mongoose              // mongoose包装
 │              
-├─routes                // koa路由
+├─routes                // 路由
 │      
 └─util                  // 常用工具
         
@@ -37,6 +37,7 @@ koapi
 * 网易云音乐代理 [NeteaseCloudMusicApi](https://github.com/Binaryify/NeteaseCloudMusicApi)
 * github项目代理
 * 七牛云代理优化
+* VPS Server 监控本地可视化
 * 博客sitemap
 * 评论/回复会放松邮件给评论/回复作者 [nodemailer](https://github.com/nodemailer/nodemailer)
 * 评论反垃圾 [akismet](https://github.com/chrisfosterelli/akismet-api)
