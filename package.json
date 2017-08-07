@@ -10,18 +10,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/BubblyPoker/koapi.git"
+    "url": "git+https://github.com/jo0ger/koapi.git"
   },
   "keywords": [
     "koa",
     "api"
   ],
-  "author": "bubblypoker",
+  "author": "Jooger",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/BubblyPoker/koapi/issues"
+    "url": "https://github.com/jo0ger/koapi/issues"
   },
-  "homepage": "https://github.com/BubblyPoker/koapi#readme",
+  "homepage": "https://github.com/jo0ger/koapi#readme",
   "dependencies": {
     "highlight.js": "^9.10.0",
     "jsonwebtoken": "^7.3.0",

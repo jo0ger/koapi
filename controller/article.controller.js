@@ -67,7 +67,7 @@ articleCtrl.list.GET = async (ctx, next) => {
       'meta.visit': -1,
       create_at: -1
     }
-    options.select = 'title create_at meta tag thumbs'
+    options.select = 'title create_at meta tag thumb'
   } else if (!!sort) {
     // sort
     options.sort = typeof sort === 'string' ? JSON.parse(sort) : sort
@@ -260,7 +260,7 @@ articleCtrl.item.GET = async (ctx, next) => {
     if (data && data.tag && data.tag.length) {
       data.related = []
       await ArticleModel.find({ _id: { $nin: [ data._id ] }, state: 1, tag: { $in: data.tag.map(t => t._id) }})
-        .select('id title thumbs create_at meta')
+        .select('id title thumb create_at meta')
         .exec()
         .then(articles => {
           data.related = articles
@@ -280,12 +280,12 @@ articleCtrl.item.GET = async (ctx, next) => {
         query.state = 1
       }
       let prev = await ArticleModel.findOne(query)
-        .select('title create_at thumbs')
+        .select('title create_at thumb')
         .sort('-create_at')
         .lt('create_at', data.create_at)
         .exec()
       let next = await ArticleModel.findOne(query)
-        .select('title create_at thumbs')
+        .select('title create_at thumb')
         .sort('create_at')
         .gt('create_at', data.create_at)
         .exec()

@@ -11,7 +11,7 @@ module.exports = router => {
   // 全局拦截
   router.use('*', async (ctx, next) => {
     let { request, response } = ctx
-    const allowedOrigins = ['http://bubblypoker.com', 'http://admin.bubblypoker.com']
+    const allowedOrigins = ['http://jooger.me', 'http://admin.jooger.me']
     const origin = request.get('origin') || ''
     if (allowedOrigins.includes(origin) || origin.includes('localhost') || request.query._DEV_) {
       response.set('Access-Control-Allow-Origin', origin)

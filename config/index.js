@@ -11,7 +11,7 @@ module.exports = {
     ROOT_PATH: __dirname,
     PORT: 5000,
     PREFIX: '/api',
-    VERSION: 'v1',
+    VERSION: 'v1.0',
     CODE: {
       FAILED: -1,
       SUCCESS: 0,

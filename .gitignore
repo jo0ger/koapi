@@ -31,3 +31,5 @@ npm-debug.log
 # IDEA
 .vscode
 .idea
+
+.DS_Store
