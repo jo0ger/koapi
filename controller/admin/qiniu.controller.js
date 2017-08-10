@@ -2,10 +2,10 @@
  * 七牛获取上传配置
  */
 
-const qiniu = require('qn')
-const { QINIU } = require('../config')
+import qiniu from 'qn'
+import { QINIU } from '../../config'
+import { handleRequest, handleSuccess, handleError } from '../../utils'
 const client = qiniu.create(QINIU)
-const { handle: { handleRequest, handleSuccess, handleError } } = require('../util')
 const qiniuCtrl = {}
 
 qiniuCtrl.GET = async (ctx, next) => {
@@ -21,4 +21,4 @@ qiniuCtrl.GET = async (ctx, next) => {
   })
 }
 
-module.exports = async (ctx, next) => await handleRequest({ ctx, next, type: qiniuCtrl })
+export default async (ctx, next) => await handleRequest({ ctx, next, type: qiniuCtrl })

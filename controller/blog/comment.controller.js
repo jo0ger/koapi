@@ -1,16 +1,13 @@
 /**
- * 评论controller
+ * @desc 评论处理
+ * @author Jooger
  */
 
 // const geoip = require('geoip-lite')
-const { 
-  handle: { handleRequest, handleSuccess, handleError },
-  validate: { isEmail, isObjectId },
-  marked
-} = require('../util')
-const config = require('../config')
-const authIsVerified = require('../middleware/auth')
-const { CommentModel, ArticleModel } = require('../model')
+import { handleRequest, handleSuccess, handleError, isObjectId, isEmail } from '../../utils'
+import config from '../../config'
+import authIsVerified from '../../middleware/auth'
+import { CommentModel, ArticleModel } from'../../model'
 const commentCtrl = { list: {}, item: {} }
 
 // 获取评论列表
@@ -382,7 +379,7 @@ async function updateArticleCommentCount (article_ids = []) {
   })
 }
 
-module.exports = {
+export default {
   list: async (ctx, next) => await handleRequest({ ctx, next, type: commentCtrl.list }),
   item: async (ctx, next) => await handleRequest({ ctx, next, type: commentCtrl.item })
 }

@@ -1,16 +1,16 @@
-const Koa = require('koa')
+import Koa from 'koa'
+import Router from 'koa-router'
+import bodyparser from 'koa-bodyparser'
+import httpLogger from 'koa-logger'
+import respond from 'koa-respond'
+import minimist from 'minimist'
+
+import config from './config'
+import db from './mongoose'
+import routes from './routes'
+import { logger, handleError } from './utils'
+
 const app = new Koa()
-const Router = require('koa-router')
-const bodyparser = require('koa-bodyparser')
-const httpLogger = require('koa-logger')
-const respond = require('koa-respond')
-const minimist = require('minimist')
-
-const logger = require('./util/logger')
-const config = require('./config')
-const db = require('./mongoose')
-const routes = require('./routes')
-
 const router = new Router({
   prefix: `/${config.SERVER.VERSION}`
 })
@@ -44,7 +44,7 @@ app.use(respond({
 routes(router)
 app.use(router.routes(), router.allowedMethods())
 
-// error response listen
+// 错误监听
 app.on('error', (err, ctx) => {
   console.log(err);
   logger.error('server error', err)
@@ -54,4 +54,4 @@ app.on('error', (err, ctx) => {
 // 签名密钥只在配置项 signed 参数为真是才会生效
 app.keys = [config.AUTH.SECRET_KEY]
 
-module.exports = app
+export default app

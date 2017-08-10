@@ -1,8 +1,9 @@
 /**
  * 处理请求响应
+ * @author Jooger
  */
 
-const config = require('../config')
+import config from '../config'
 const { METHOD_NOT_ALLOWED, FAILED } = config.SERVER.CODE
 
 export async function handleRequest ({ ctx, type, next }) {

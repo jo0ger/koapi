@@ -2,11 +2,8 @@
  * 配置 controller
  */
 
-const { 
-  handle: { handleRequest, handleSuccess, handleError },
-  validate: { isObjectId }
-} = require('../util')
-const { OptionModel } = require('../model')
+import { handleRequest, handleSuccess, handleError, isObjectId } from '../../utils'
+import { OptionModel } from '../../model'
 const optionCtrl = {}
 
 // 获取配置信息
@@ -60,4 +57,4 @@ optionCtrl.PUT = async (ctx, next) => {
 
 
 
-module.exports = async (ctx, next) => await handleRequest({ctx, next, type: optionCtrl })
+export default async (ctx, next) => await handleRequest({ctx, next, type: optionCtrl })

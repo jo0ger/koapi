@@ -4,7 +4,7 @@
 
 const config = require('./index')
 
-module.exports = {
+export default {
   name: config.INFO.author,
   slogan: '低头努力，剩下的交给时光',
   avatar: '/static/avatar/admin.png',

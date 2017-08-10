@@ -1,13 +1,11 @@
 /**
- * category controller
+ * @desc 分类处理
+ * @author Jooger
  */
 
-const { 
-  handle: { handleRequest, handleSuccess, handleError },
-  validate: { isObjectId }
-} = require('../util')
-const { CategoryModel, ArticleModel } = require('../model')
-const authIsVerified = require('../middleware/auth')
+import { handleRequest, handleSuccess, handleError, isObjectId } from '../../utils'
+import { CategoryModel, ArticleModel } from '../../model'
+import authIsVerified from '../../middleware/auth'
 const categoryCtrl = { list: {}, item: {} }
 
 // 获取分类列表，不分页
@@ -193,7 +191,7 @@ categoryCtrl.item.DELETE = async (ctx, next) => {
     })
 }
 
-module.exports = {
+export default {
   list: async (ctx, next) => await handleRequest({ ctx, type: categoryCtrl.list, next }),
   item: async (ctx, next) => await handleRequest({ ctx, type: categoryCtrl.item, next })
 }

@@ -1,13 +1,11 @@
 /**
- * 权限controller
+ * @desc 权限相关
+ * @author Jooger
  */
 
-const md5 = require('md5')
-const { AUTH } = require('../config')
-const { 
-  handle: { handleRequest, handleSuccess, handleError }
-} = require('../util')
-const { AuthModel } = require('../model')
+import md5 from 'md5'
+import { handleRequest, handleSuccess, handleError } from '../../utils'
+import { AuthModel } from '../../model'
 const authCtrl = {}
 
 function md5Encode (str = '') {
@@ -94,4 +92,4 @@ authCtrl.PUT = async (ctx, next) => {
   }
 }
 
-module.exports = async (ctx, next) => await handleRequest({ ctx, next, type: authCtrl })
+export default async (ctx, next) => await handleRequest({ ctx, next, type: authCtrl })

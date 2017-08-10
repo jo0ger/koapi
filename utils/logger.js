@@ -1,3 +1,8 @@
+/**
+ * @desc logger
+ * @author Jooger
+ */
+
 const isProd = process.env.NODE_ENV === 'production'
 const simpleNodeLogger = require('simple-node-logger')
 const timestampFormat = 'YYYY-MM-DD HH:mm:ss'

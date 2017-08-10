@@ -1,11 +1,14 @@
-const minimist = require('minimist')(process.argv)
+/**
+ * @desc koapi 配置
+ * @author Jooger
+ */
 
-module.exports = {
+export default {
   INFO: {
     name: 'Koapi',
     version: '1.0.0',
     author: 'Jooger',
-    site: 'https://jooger.me'
+    site: 'http://jooger.me'
   },
   SERVER: {
     ROOT_PATH: __dirname,
@@ -32,15 +35,13 @@ module.exports = {
     ]
   },
   MONGODB: {
-    URI: 'mongodb://127.0.0.1/koapi',
-    USERNAME: minimist.dbusername || 'DB_username',
-    PASSWORD: minimist.dbpassword || 'DB_password'
+    URI: 'mongodb://127.0.0.1/koapi'
   },
   AUTH: {
-    SECRET_KEY: minimist.authKey || 'Koapi',
+    SECRET_KEY: 'Koapi',
     EXPIRED: 60 * 60 * 24 * 365,
-    DEFAULT_NAME: minimist.defaultname || 'admin',
-    DEFAULT_PASSWORD: minimist.defaultpassword || 'admin'
+    DEFAULT_NAME: 'admin',
+    DEFAULT_PASSWORD: 'admin'
   },
   QINIU: {
     accessKey: 'yvmsQiG7qdCesWCii3nMEMHK-8Ifi7EyRlcY1FmK',

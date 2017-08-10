@@ -1,12 +1,10 @@
 /**
- * 点赞 | 顶 | 喜欢 controller
+ * @desc 点赞 | 顶 | 喜欢 controller
+ * @author Jooger
  */
 
-const { 
-  handle: { handleRequest, handleSuccess, handleError },
-  validate: { isObjectId }
-} = require('../util')
-const { ArticleModel, CommentModel } = require('../model')
+import { handleRequest, handleSuccess, handleError, isObjectId } from '../../utils'
+import { ArticleModel, CommentModel } from '../../model'
 const likeCtrl = {}
 
 // 点赞
@@ -36,4 +34,4 @@ likeCtrl.POST = async (ctx, next) => {
   }
 }
 
-module.exports = async (ctx, next) => await handleRequest({ ctx, next, type: likeCtrl })
+export default async (ctx, next) => await handleRequest({ ctx, next, type: likeCtrl })

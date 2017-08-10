@@ -2,9 +2,9 @@
  * 权限 Model
  */
 
-const md5 = require('md5')
-const mongoose = require('mongoose')
-const { AUTH } = require('../config')
+import md5 from 'md5'
+import mongoose from 'mongoose'
+import { AUTH } from '../config'
 
 const authSchema = new mongoose.Schema({
   name: { type: String, default: AUTH.DEFAULT_NAME, required: true },
@@ -17,4 +17,4 @@ const authSchema = new mongoose.Schema({
   avatar: { type: String, default: '' }
 })
 
-module.exports = authSchema
+export default authSchema

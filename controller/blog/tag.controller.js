@@ -1,13 +1,11 @@
 /**
- * tag controller
+ * @desc 标签处理
+ * @author Jooger
  */
 
-const { 
-  handle: { handleRequest, handleSuccess, handleError },
-  validate: { isObjectId }
-} = require('../util')
-const { TagModel, ArticleModel } = require('../model')
-const authIsVerified = require('../middleware/auth')
+import { handleRequest, handleSuccess, handleError, isObjectId } from '../../utils'
+import { TagModel, ArticleModel } from '../../model'
+import authIsVerified from '../../middleware/auth'
 const tagCtrl = { list: {}, item: {} }
 
 // 获取标签列表，不分页
@@ -194,7 +192,7 @@ tagCtrl.item.DELETE = async (ctx, next) => {
     })
 }
 
-module.exports = {
+export default {
   list: async (ctx, next) => await handleRequest({ ctx, type: tagCtrl.list, next }),
   item: async (ctx, next) => await handleRequest({ ctx, type: tagCtrl.item, next })
 }

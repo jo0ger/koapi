@@ -2,12 +2,13 @@
  * mongodb连接模块
  */
 
-const mongoose = require('mongoose')
-const mongoosePaginate = require('mongoose-paginate')
-const md5 = require('md5')
-const config = require('../config')
+import mongoose from 'mongoose'
+import mongoosePaginate from 'mongoose-paginate'
+import md5 from 'md5'
+import config from '../config'
+import { AuthModel, CategoryModel } from '../model'
+
 mongoose.Promise = global.Promise
-const { AuthModel, CategoryModel } = require('../model')
 
 const db = {
   init () {
@@ -74,6 +75,6 @@ const db = {
 }
 
 
-module.exports = {
+export default {
   init: db.init.bind(db)
 }

@@ -1,24 +1,18 @@
 /**
- * model entry
+ * @desc Models Entry
+ * @author Jooger
  */
 
-const fs = require('fs')
-const mongoose = require('mongoose')
-const { firstUpperCase } = require('../util')
-const files = fs.readdirSync(__dirname)
-let models = {}
+import mongoose from 'mongoose'
+import { generate, firstUpperCase } from '../utils'
+const models = {}
 
-files.every((file) => {
-  if (file !== 'index.js' && file.slice(-3) === '.js') {
-    let modelName = firstUpperCase(file.split('.')[0])
-    let fileName = file.slice(0, -3)
-    let schema = require(`./${fileName}`)
-    // 先构建schema
-    buildSchema(schema)
-    // 再构建model
-    models[`${modelName}Model`] = mongoose.model(modelName, schema)
-  }
-  return true
+generate(__dirname, (filename, schema) => {
+  const modelName = firstUpperCase(filename).split('.')[0]
+  // 先构建schema
+  buildSchema(schema)
+  // 再构建model
+  models[`${modelName}Model`] = mongoose.model(modelName, schema)
 })
 
 // 构建schema

@@ -1,17 +1,12 @@
 /**
- * article controller
+ * @desc 文章处理
+ * @author Jooger
  */
 
-const mongoose = require('mongoose')
-const { 
-  handle: { handleRequest, handleSuccess, handleError },
-  validate: { isObjectId, isType },
-  marked,
-  createObjectId
-} = require('../util')
-const config = require('../config')
-const { ArticleModel, CategoryModel, TagModel, CommentModel } = require('../model')
-const authIsVerified = require('../middleware/auth')
+import { handleRequest, handleSuccess, handleError, isObjectId, isType, marked, createObjectId } from '../../utils'
+import config from '../../config'
+import { ArticleModel, CategoryModel, TagModel, CommentModel } from '../../model'
+import authIsVerified from '../../middleware/auth'
 const articleCtrl = { list: {}, item: {} }
 
 // 根据文章ID删除评论
@@ -45,7 +40,7 @@ articleCtrl.list.GET = async (ctx, next) => {
   let query = {}
 
   // 文章状态
-  if (['-1', '0', '1', -1, 0, 1].includes(state)) {
+  if (['0', '1', 0, 1].includes(state)) {
     query.state = state
   }
 
@@ -354,19 +349,28 @@ articleCtrl.item.PUT = async (ctx, next) => {
     })
 }
 
-// 修改单篇文章
+// 修改单篇文章(发布状态， 是否公开， 私密密码)
 articleCtrl.item.PATCH = async (ctx, next) => {
-  let { id } = ctx.params
-  let { state } = ctx.request.body
+  const { id } = ctx.params
+  const { state, isPublic, password } = ctx.request.body
   if (!isObjectId(id)) {
     return handleError({ ctx, message: '缺少文章id' })
   }
 
-  if (![-1, 0, 1, '-1', '0', '1'].includes(state)) {
+  const params = {}
+
+  if (![0, 1, '0', '1'].includes(state)) {
     return handleError({ ctx, message: '文章状态不对' })
   }
 
-  await ArticleModel.findByIdAndUpdate(id, { state }, { new: true })
+  params.state = state
+
+  if (isType(isPublic, 'boolean')) {
+    params.public = isPublic
+    params.password = password
+  }
+
+  await ArticleModel.findByIdAndUpdate(id, params, { new: true })
     .populate({ path: 'category', select: 'name description extends' })
     .populate({ path: 'tag', select: 'name description extends' })
     .exec()
@@ -395,7 +399,7 @@ articleCtrl.item.DELETE = async (ctx, next) => {
     })
 }
 
-module.exports = {
+export default {
   list: async (ctx, next) => await handleRequest({ ctx, next, type: articleCtrl.list }),
   item: async (ctx, next) => await handleRequest({ ctx, next, type: articleCtrl.item })
 }

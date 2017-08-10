@@ -2,12 +2,10 @@
  * 文章归档controller
  */
 
-const { 
-  handle: { handleRequest, handleSuccess, handleError }
-} = require('../util')
-const config = require('../config')
-const { ArticleModel } = require('../model')
-const authIsVerified = require('../middleware/auth')
+import { handleRequest, handleSuccess, handleError } from '../../utils'
+import config from '../../config'
+import { ArticleModel } from '../../model'
+import authIsVerified from '../../middleware/auth'
 const archivesCtrl = {}
 
 archivesCtrl.GET = async (ctx, next) => {
@@ -95,4 +93,4 @@ archivesCtrl.GET = async (ctx, next) => {
   }
 }
 
-module.exports = async (ctx, next) => await handleRequest({ ctx, next, type: archivesCtrl })
+export default async (ctx, next) => await handleRequest({ ctx, next, type: archivesCtrl })

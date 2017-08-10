@@ -3,11 +3,11 @@
  * 包括：文章，分类，标签总数，可扩展其他类型
  */
 
-const { handle: { handleRequest, handleSuccess, handleError } } = require('../util')
-const {
+import { handleRequest, handleSuccess, handleError } from '../../utils'
+import {
   ArticleModel, TagModel, CategoryModel
-} = require('../model')
-const authIsVerified = require('../middleware/auth')
+} from '../../model'
+import authIsVerified from '../../middleware/auth'
 const statisticsCtrl = {}
 
 statisticsCtrl.GET = async (ctx, next) => {
@@ -31,4 +31,4 @@ statisticsCtrl.GET = async (ctx, next) => {
   }})
 }
 
-module.exports = async (ctx, next) => await handleRequest({ ctx, next, type: statisticsCtrl })
+export default async (ctx, next) => await handleRequest({ ctx, next, type: statisticsCtrl })
