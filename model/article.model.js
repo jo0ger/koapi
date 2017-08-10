@@ -1,9 +1,10 @@
 /**
- * 文章 Model
+ * @desc 文章 Model
+ * @author Jooger
  */
 
-const mongoose = require('mongoose')
-const mongoosePaginate = require('mongoose-paginate')
+import mongoose from 'mongoose'
+import mongoosePaginate from 'mongoose-paginate'
 
 const articleSchema = new mongoose.Schema({
   // 文章标题

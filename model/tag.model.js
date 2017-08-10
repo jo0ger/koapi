@@ -1,9 +1,10 @@
 /**
- * 标签Model
+ * @desc 标签 Model
+ * @author Jooger
  */
 
-const mongoose = require('mongoose')
-const mongoosePaginate = require('mongoose-paginate')
+import mongoose from 'mongoose'
+import mongoosePaginate from 'mongoose-paginate'
 
 const tagSchema = new mongoose.Schema({
   name: { type: String, required: true },

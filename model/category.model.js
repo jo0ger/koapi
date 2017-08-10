@@ -1,9 +1,10 @@
 /**
- * 分类 Model
+ * @desc 分类 Model
+ * @author Jooger
  */
 
-const mongoose = require('mongoose')
-const mongoosePaginate = require('mongoose-paginate')
+import mongoose from 'mongoose'
+import mongoosePaginate from 'mongoose-paginate'
 
 const categorySchema = new mongoose.Schema({
   name: { type: String, required: true },

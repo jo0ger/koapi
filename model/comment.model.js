@@ -1,9 +1,10 @@
 /**
- * 评论 model
+ * @desc 评论 Model
+ * @author Jooger
  */
 
-const mongoose = require('mongoose')
-const mongoosePaginate = require('mongoose-paginate')
+import mongoose from 'mongoose'
+import mongoosePaginate from 'mongoose-paginate'
 
 const commentSchema = new mongoose.Schema({
   // 评论通用项

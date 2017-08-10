@@ -3,7 +3,7 @@
  * @author Jooger
  */
 
-// const geoip = require('geoip-lite')
+// import geoip from 'geoip-lite'
 import { handleRequest, handleSuccess, handleError, isObjectId, isEmail } from '../../utils'
 import config from '../../config'
 import authIsVerified from '../../middleware/auth'

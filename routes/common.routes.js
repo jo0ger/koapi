@@ -11,7 +11,9 @@ const prefix = 'blog'
 export default router => {
 
   // Auth
-  router.all('/auth', commonControllers.auth)
+  router.all('/auth/info', commonControllers.auth.info)
+  router.all('/auth/login', commonControllers.auth.login)
+  router.all('/auth/logout', commonControllers.auth.logout)
 
   // Option配置信息
   router.all('/option', commonControllers.option)

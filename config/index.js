@@ -38,6 +38,7 @@ export default {
     URI: 'mongodb://127.0.0.1/koapi'
   },
   AUTH: {
+    COOKIE_NAME: 'jooger_auth',
     SECRET_KEY: 'Koapi',
     EXPIRED: 60 * 60 * 24 * 365,
     DEFAULT_NAME: 'admin',

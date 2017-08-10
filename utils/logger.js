@@ -3,11 +3,10 @@
  * @author Jooger
  */
 
-const isProd = process.env.NODE_ENV === 'production'
 const simpleNodeLogger = require('simple-node-logger')
 const timestampFormat = 'YYYY-MM-DD HH:mm:ss'
 
-const logger = isProd
+const logger = process.env.NODE_ENV === 'production'
   ? simpleNodeLogger.createRollingFileLogger({
     timestampFormat,
     logDirectory: './logs',

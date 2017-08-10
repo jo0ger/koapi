@@ -4,16 +4,21 @@
  */
 
 import md5 from 'md5'
+import { AUTH } from '../../config'
 import { handleRequest, handleSuccess, handleError } from '../../utils'
 import { AuthModel } from '../../model'
-const authCtrl = {}
+const authCtrl = {
+  login: {},
+  logout: {},
+  info: {}
+}
 
 function md5Encode (str = '') {
   return md5(`${AUTH.SECRET_KEY}${str}`)
 }
 
 // 获取个人信息
-authCtrl.GET = async (ctx, next) => {
+authCtrl.info.GET = async (ctx, next) => {
   await AuthModel.findOne({})
     .select('-password')
     .exec()
@@ -26,30 +31,40 @@ authCtrl.GET = async (ctx, next) => {
 }
 
 // 生成token
-authCtrl.POST = async (ctx, next) => {
-  let { password } = ctx.request.body
+authCtrl.login.POST = async (ctx, next) => {
+  const { password } = ctx.request.body
   if (!password) {
     return handleError({ ctx, message: '密码不能为空' })
   }
-  let auth = await AuthModel.findOne({})
+  const auth = await AuthModel.findOne({})
     .select('password -_id')
     .exec()
     .catch(err => {
       handleError({ ctx, err, message: '登录失败' })
     })
   if (auth && auth.password === md5Encode(password)) {
-    let token = jwt.sign({
+    const token = jwt.sign({
       id: auth._id, 
       name: auth.name
     }, AUTH.SECRET_KEY, { expiresIn: AUTH.EXPIRED })
+    ctx.cookies.set(AUTH.COOKIE_NAME, token, {signed: true})
     handleSuccess({ ctx, data: { token }, message: '登录成功' })
   } else {
-    handleError({ ctx, message: '禁地勿闯！！！' })
+    handleError({ ctx, message: '少侠，我不认识你！' })
   }
 }
 
+authCtrl.logout.GET = async (ctx, next) => {
+  const token = jwt.sign({
+    id: auth._id, 
+    name: auth.name
+  }, AUTH.SECRET_KEY, { expiresIn: AUTH.EXPIRED })
+  ctx.cookies.set(AUTH.COOKIE_NAME, token, {signed: true})
+  handleSuccess({ ctx, data: { token }, message: '登录成功' })
+} 
+
 // 修改个人信息
-authCtrl.PUT = async (ctx, next) => {
+authCtrl.info.PUT = async (ctx, next) => {
   let { auth, auth: { name, password, slogan, avatar, old_password, confirm_password } } = ctx.request.body
 
   const error = (message = '') => {
@@ -92,4 +107,8 @@ authCtrl.PUT = async (ctx, next) => {
   }
 }
 
-export default async (ctx, next) => await handleRequest({ ctx, next, type: authCtrl })
+export default {
+  login: async (ctx, next) => await handleRequest({ ctx, next, type: authCtrl.login }),
+  logout: async (ctx, next) => await handleRequest({ ctx, next, type: authCtrl.logout }),
+  info: async (ctx, next) => await handleRequest({ ctx, next, type: authCtrl.info })
+}
