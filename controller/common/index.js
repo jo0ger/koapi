@@ -4,7 +4,7 @@
  * @date 10 Aug 2017
  */
 
-import { generate, firstUpperCase } from '../../utils'
+import { generate } from '../../utils'
 const commonControllers = {}
 
 generate(__dirname, (filename, controller) => {

@@ -5,25 +5,29 @@
 
 import mongoose from 'mongoose'
 import { generate, firstUpperCase } from '../utils'
-const models = {}
+import commonSchemas from './common'
+import blogSchemas from './blog'
 
-generate(__dirname, (filename, schema) => {
-  const modelName = firstUpperCase(filename).split('.')[0]
-  // 先构建schema
-  buildSchema(schema)
-  // 再构建model
-  models[`${modelName}Model`] = mongoose.model(modelName, schema)
+const models = {}
+const schemas = {
+  ...commonSchemas,
+  ...blogSchemas
+}
+
+Object.keys(schemas).forEach(key => {
+  models[`${key}Model`] = mongoose.model(key, buildSchema(schemas[key]))
 })
 
 // 构建schema
 function buildSchema (schema) {
   if (!schema) {
-    return
+    return null
   }
   schema.set('versionKey', false)
   schema.set('toObject', { getters: true })
   schema.set('toJSON', { getters: true, virtuals: false })
   schema.pre('findOneAndUpdate', updateHook)
+  return schema
 }
 
 // 更新update_at

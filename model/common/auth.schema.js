@@ -4,7 +4,7 @@
 
 import md5 from 'md5'
 import mongoose from 'mongoose'
-import { AUTH } from '../config'
+import { AUTH } from '../../config'
 
 const authSchema = new mongoose.Schema({
   name: { type: String, default: AUTH.DEFAULT_NAME, required: true },

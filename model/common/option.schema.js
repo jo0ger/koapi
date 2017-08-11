@@ -4,7 +4,7 @@
 
 const mongoose = require('mongoose')
 const mongoosePaginate = require('mongoose-paginate')
-const config = require('../config')
+const config = require('../../config')
 
 const optionSchema = new mongoose.Schema({
   // ============================

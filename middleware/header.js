@@ -20,7 +20,7 @@ export default (ctx, next) => {
 
   if (request.method === 'OPTIONS') {
     ctx.status = 200
-    ctx.status = 'ok'
+    ctx.body = 'ok'
     return
   }
 
