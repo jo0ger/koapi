@@ -9,28 +9,28 @@ import authIsVerified from '../../middleware/auth'
 const archivesCtrl = {}
 
 archivesCtrl.GET = async (ctx, next) => {
-  let { page, page_size } = ctx.query
+  let { page, pageSize } = ctx.query
   let $match = {}
   if (!await authIsVerified(ctx)) {
     $match = { state: 1 }
   }
   let $page = Number(page || 1)
-  let $limit = Number(page_size || config.BLOG.LIMIT)
+  let $limit = Number(pageSize || config.BLOG.LIMIT)
   let $skip = ($page - 1) * $limit
 
   let total = await ArticleModel.count($match).exec()
 
   let list = await ArticleModel.aggregate([
     { $match },
-    { $sort: { create_at: -1 } },
+    { $sort: { createAt: -1 } },
     // 先不分页了
     // { $skip },
     // { $limit },
     { $project: {
-      year: { $year: "$create_at" },
+      year: { $year: "$createAt" },
       title: 1,
-      excerpt: 1,
-      create_at: 1,
+      description: 1,
+      createAt: 1,
       'meta.pvs': 1,
       'meta.comments': 1,
       'meta.likes': 1,
@@ -44,8 +44,8 @@ archivesCtrl.GET = async (ctx, next) => {
         $push: {
           _id: '$_id',
           title: '$title',
-          excerpt: '$excerpt',
-          create_at: '$create_at',
+          description: '$description',
+          createAt: '$createAt',
           meta: {
             pvs: '$meta.pvs',
             likes: '$meta.likes',
@@ -65,7 +65,7 @@ archivesCtrl.GET = async (ctx, next) => {
       for (let n = 0; n < archive.list.length; n++) {
         let a = await ArticleModel.findById(archive.list[n]._id)
           .populate('category tag')
-          .select('title category tag create_at update_at meta').exec()
+          .select('title category tag createAt updateAt meta').exec()
         archive.list.splice(n, 1, a.toObject())
       }
     }

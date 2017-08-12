@@ -30,9 +30,9 @@ function buildSchema (schema) {
   return schema
 }
 
-// 更新update_at
+// 更新updateAt
 function updateHook (next) {
-  this.findOneAndUpdate({}, { update_at: Date.now() })
+  this.findOneAndUpdate({}, { updateAt: Date.now() })
   next && next()
 }
 

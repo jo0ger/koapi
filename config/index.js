@@ -28,7 +28,7 @@ export default {
   BLOG: {
     LIMIT: 10,
     COMMENT_LIMIT: 99,
-    DATE_FORMAT: 'yyyy-MM-dd',
+    dateFormat: 'yyyy-MM-dd',
     DEFAULT_CATEGORY: [
       { name: 'CODE', description: 'CODE', extends: [{ color: '#108ee9'}] },
       { name: 'THINK', description: 'THINK', extends: [{ color: '#108ee9'}] }

@@ -9,27 +9,72 @@ import { ArticleModel, CategoryModel, TagModel, CommentModel } from '../../model
 import authIsVerified from '../../middleware/auth'
 const articleCtrl = { list: {}, item: {} }
 
-// 根据文章ID删除评论
-async function deleteCommentByArticleId (id) {
-  if (!id) {
-    return
+// 校验配置
+const validateConfig = {
+  id: {
+    type: 'objectId',
+    required: true,
+    message: '文章ID不能为空'
+  },
+  title: {
+    type: 'string',
+    required: true,
+    message: '文章标题不能为空'
+  },
+  content: {
+    type: 'string',
+    required: true,
+    message: '文章内容不能为空'
+  },
+  tag: {
+    type: 'array',
+    required: true,
+    validate (value) {
+      return value.length > 1
+    },
+    message: {
+      required: '标签不能为空',
+      validate: '标签数组的长度最少为2'
+    }
   }
-  // 批量/单篇删除文章的时候删除评论
-  await CommentModel.remove({ page_id: isType(id, 'array') ? { $in: id } : id }).exec()
 }
 
-// 获取文章列表
+/**
+ * @desc 根据文章ID删除评论
+ * @param  {String | Array[String]} id 文章id(数组)
+ */
+async function deleteCommentByArticleId (id) {
+  if (id) {
+    // 批量/单篇删除文章的时候删除评论
+    await CommentModel.remove({ pageId: isType(id, 'array') ? { $in: id } : id }).exec()
+  }
+}
+
+/**
+ * @desc 获取文章列表
+ * @type GET
+ * @param {Number} [options] page                   请求列表页数 [默认 1]
+ * @param {Number} [options] pageSize               每页文章数 [默认 10]
+ * @param {Number} [options] state                  文章状态 [可选值 0 草稿 | 1 已发布]
+ * @param {String} [options] keyword                搜索关键词 [匹配标题和简介]
+ * @param {String} [options] category               分类 [分类id 或 分类name]
+ * @param {String} [options] tag                    标签 [标签id 或 标签name]
+ * @param {Date} [options] startDate                起始查询时间 eg. '2017-08-11'
+ * @param {Date} [options] endDate                  结束查询时间 eg. '2017-08-11'
+ * @param {Boolean} [options] hot                   热门文章查询
+ * @param {String | Object} [options] sort          文章排序 [hot存在情况下， 忽略sort]
+ */
 articleCtrl.list.GET = async (ctx, next) => {
-  // state => -1 || 0 || 1
-  // sort => meta.likes: -1 || ...    方便后台列表排序
-  // hot => meta.comments: -1 && meta.likes: -1 && meta.pvs: -1
-  let { page, page_size, state, keyword, category, tag, start_date, end_date, hot, sort } = ctx.query
+  // state => 0 || 1
+  // sort => meta.ups: -1 || ...    方便后台列表排序 需要JSON序列化
+  // hot => meta.comments: -1 && meta.ups: -1 && meta.pvs: -1
+  const { page, pageSize, state, keyword, category, tag, startDate, endDate, hot, sort } = ctx.query
 
   // 过滤条件
   const options = {
-    sort: { create_at: -1 },
+    sort: { createAt: -1 },
     page: Number(page || 1),
-    limit: Number(page_size || config.BLOG.LIMIT),
+    limit: Number(pageSize || config.BLOG.LIMIT),
     populate: [
       { path: 'category', select: 'name description extends' },
       { path: 'tag', select: 'name description extends' }
@@ -37,10 +82,10 @@ articleCtrl.list.GET = async (ctx, next) => {
   }
 
   // 文章查询条件
-  let query = {}
+  const query = {}
 
   // 文章状态
-  if (['0', '1', 0, 1].includes(state)) {
+  if (['0', '1'].includes(state)) {
     query.state = state
   }
 
@@ -49,24 +94,29 @@ articleCtrl.list.GET = async (ctx, next) => {
     const keywordReg = new RegExp(keyword)
     query.$or = [
       { title:  keywordReg },
-      { excerpt:  keywordReg }
+      { description:  keywordReg }
     ]
   }
 
   // 虽然hot可以放在sort里，但这里为了前台热门文章获取，单独列出hot
   // hot和sort二者只能存其一
-  if (!!hot) {
+  if (hot) {
+    // hot 按照评论，点赞数，浏览量，创建时间进行倒序排序
     options.sort = {
       'meta.comments': -1,
-      'meta.likes': -1,
+      'meta.ups': -1,
       'meta.pvs': -1,
-      create_at: -1
+      createAt: -1
     }
-    options.select = 'title create_at meta tag thumb'
-  } else if (!!sort) {
-    // sort
-    options.sort = typeof sort === 'string' ? JSON.parse(sort) : sort
-    options.sort.create_at = options.sort.create_at || -1
+    options.select = 'title createAt meta tag thumb'
+  } else if (sort) {
+    // sort 排序
+    try {
+      options.sort = isType(sort, 'string') ? JSON.parse(sort) : sort
+    } catch (err) {
+      logger.error(err)
+    }
+    options.sort.createAt = options.sort.createAt || -1
   }
 
   // 分类查询
@@ -81,7 +131,8 @@ articleCtrl.list.GET = async (ctx, next) => {
           query.category = c && c._id || createObjectId()
         })
         .catch(err => {
-          handleError({ ctx, message: '分类查找失败', err })
+          logger.error('分类查找失败')
+          query.category = createObjectId()
         })
     }
   }
@@ -97,32 +148,33 @@ articleCtrl.list.GET = async (ctx, next) => {
         .then(t => {
           query.tag = t && t._id || createObjectId()
         })
-        .catch(err => {
-          handleError({ ctx, message: '标签查找失败', err })
+        .catch(() => {
+          logger.error('标签查找失败')
+          query.tag = createObjectId()
         })
     }
   }
 
   // 起始日期
-  if (start_date) {
-    const $gte = new Date(start_date)
+  if (startDate) {
+    const $gte = new Date(startDate)
     if ($gte.toString() !== 'Invalid Date') {
-      query.create_at = { $gte }
+      query.createAt = { $gte }
     }
   }
 
   // 结束日期
-  if (end_date) {
-    const $lte = new Date(end_date)
+  if (endDate) {
+    const $lte = new Date(endDate)
     if ($lte.toString() !== 'Invalid Date') {
-      query.create_at = Object.assign({}, query.create_at, { $lte })
+      query.createAt = Object.assign({}, query.createAt, { $lte })
     }
   }
 
-  // 如果未通过权限校验，将文章状态重置为1
-  if (!await authIsVerified(ctx)) {
-    query.state = 1
-    options.select = '-content -rendered_content -state' // 文章列表不需要content和state
+  // 未通过权限校验（前台获取文章列表）
+  if (!ctx._verify) {
+    query.state = 1 // 将文章状态重置为1
+    options.select = '-content -renderedContent -state' // 文章列表不需要content和state
   }
 
   await ArticleModel.paginate(query, options)
@@ -133,10 +185,10 @@ articleCtrl.list.GET = async (ctx, next) => {
         data: {
           list: articles.docs,
           pagination: {
-            total: articles.total,
-            current_page: articles.page > articles.pages ? articles.pages : articles.page,
-            total_page: articles.pages,
-            per_page: articles.limit
+            totalCount: articles.total,
+            currentPage: articles.page > articles.pages ? articles.pages : articles.page,
+            totalPage: articles.pages,
+            pageSize: articles.limit
           }
         } 
       })
@@ -146,43 +198,46 @@ articleCtrl.list.GET = async (ctx, next) => {
     })
 }
 
-// 发布新文章 || 新草稿
+/**
+ * @desc 新建草稿
+ * @type GET
+ * @param {String} [required] title                 标题
+ * @param {String} [required] content               内容
+ * @param {Array} [options] keywords                关键词 eg. ['Vue', 'React']
+ * @param {String} [options] description            简介
+ * @param {String} [options] category               分类 [必须是id]
+ * @param {Array} [options] tag                     标签 eg. ['askj2jhasd123123', '12312klsadkjasdj'] 
+ * @param {Object} [options] thumb                  缩略图 eg. { uid: '', title: '', url: '', size: 123 }
+ * @param {Array} [options] extends                 扩展项 eg. [{ key: 'color', value: '#fff' }]
+ */
 articleCtrl.list.POST = async (ctx, next) => {
-  let article = ctx.request.body
-  let { title, content } = article
+  const article = ctx.request.body
+  const { title, content, category, tag } = article
   if (!title) {
     return handleError({ ctx, message: '缺少文章标题' })
-  }
-  if (!content) {
+  } else if (!content) {
     return handleError({ ctx, message: '缺少文章内容' })
+  } else if (tag && !isType(tag, 'array')) {
+    return handleError({ ctx, message: '标签参数错误，期望值：Array' })
   }
 
-  article.rendered_content = marked(content)
+  article.renderedContent = marked(content)
 
-  // 由于cms输入限制，category和tag只能传过来name，不能传_id
-  // const _c = await CategoryModel.findOne({ name: article.category }).exec()
-  // if (_c && _c._id) {
-  //   article.category = _c._id
-  // } else {
-  //   delete article.category
-  // }
-  
-  // const _ts = await TagModel.find({ name: { $in: article.tag} }).exec()
-  // if (_ts && _ts.length) {
-  //   article.tag = _ts.map(item => item._id)
-  // } else {
-  //   delete article.tag
-  // }
-
-  if (!article.category || !isObjectId(article.category)) {
+  // 分类 必须是objectId类型
+  if (category && !isObjectId(category)) {
     delete article.category
   }
 
-  const action = article.state === 1
-    ? '发布文章'
-    : article.state === 0
-      ? '新建草稿'
-      : '新建'
+  // 标签
+  if (tag) {
+    article.tag = tag.slice().map((item, index) => {
+      if (!isObjectId(item)) {
+        tag.splice(index, 1, null)
+      }
+    }).filter(item => !!item)
+  }
+
+  const action = article.state === 1 ? '新建文章（已发布）' : '新建草稿'
 
   await new ArticleModel(article).save()
     .then(data => {
@@ -195,8 +250,8 @@ articleCtrl.list.POST = async (ctx, next) => {
 
 // 批量修改文章（回收站，草稿箱，发布）
 articleCtrl.list.PATCH = async (ctx, next) => {
-  let { article_ids, state } = ctx.request.body
-  if (!article_ids || !article_ids.length) {
+  let { articleIds, state } = ctx.request.body
+  if (!articleIds || !articleIds.length) {
     return handleError({ ctx, message: '未选中文章' })
   }
   let update = {}
@@ -210,7 +265,7 @@ articleCtrl.list.PATCH = async (ctx, next) => {
       : state === -1
        ? '转移回收站'
        : '操作'
-  await ArticleModel.update({ _id: { $in: article_ids }}, { $set: update }, { multi: true })
+  await ArticleModel.update({ _id: { $in: articleIds }}, { $set: update }, { multi: true })
     .exec()
     .then(data => {
       handleSuccess({ ctx, data: {}, message: `${action}成功`})
@@ -222,18 +277,18 @@ articleCtrl.list.PATCH = async (ctx, next) => {
 
 // 批量删除文章
 articleCtrl.list.DELETE = async (ctx, next) => {
-  const { article_ids } = ctx.request.body
+  const { articleIds } = ctx.request.body
   let text = '批量'
-  if (!article_ids || !article_ids.length) {
+  if (!articleIds || !articleIds.length) {
     return handleError({ ctx, message: '未选中文章' })
   }
-  if (article_ids.length === 1) {
+  if (articleIds.length === 1) {
     text = ''
   }
-  await ArticleModel.remove({ _id: { $in: article_ids } }).exec()
+  await ArticleModel.remove({ _id: { $in: articleIds } }).exec()
     .then(async data => {
       // 删除相关评论
-      await deleteCommentByArticleId(article_ids)
+      await deleteCommentByArticleId(articleIds)
       handleSuccess({ ctx, data, message: `文章${text}删除成功` })
     })
     .catch(err => {
@@ -255,7 +310,7 @@ articleCtrl.item.GET = async (ctx, next) => {
     if (data && data.tag && data.tag.length) {
       data.related = []
       await ArticleModel.find({ _id: { $nin: [ data._id ] }, state: 1, tag: { $in: data.tag.map(t => t._id) }})
-        .select('id title thumb create_at meta')
+        .select('id title thumb createAt meta')
         .exec()
         .then(articles => {
           data.related = articles
@@ -275,14 +330,14 @@ articleCtrl.item.GET = async (ctx, next) => {
         query.state = 1
       }
       let prev = await ArticleModel.findOne(query)
-        .select('title create_at thumb')
-        .sort('-create_at')
-        .lt('create_at', data.create_at)
+        .select('title createAt thumb')
+        .sort('-createAt')
+        .lt('createAt', data.createAt)
         .exec()
       let next = await ArticleModel.findOne(query)
-        .select('title create_at thumb')
-        .sort('create_at')
-        .gt('create_at', data.create_at)
+        .select('title createAt thumb')
+        .sort('createAt')
+        .gt('createAt', data.createAt)
         .exec()
       prev = prev && prev.toObject()
       next = next && next.toObject()
@@ -331,7 +386,7 @@ articleCtrl.item.PUT = async (ctx, next) => {
   if (!content) {
     return handleError({ ctx, message: '缺少文章内容' })
   }
-  article.rendered_content = marked(content)
+  article.renderedContent = marked(content)
 
   if (!article.category || !isObjectId(article.category)) {
     delete article.category

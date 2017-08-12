@@ -15,26 +15,26 @@ const commentCtrl = { list: {}, item: {} }
 commentCtrl.list.GET = async (ctx, next) => {
   // sort 排序 0 时间倒序 1 时间正序 2 点赞数倒序
   // type 评论获取方式 0 平铺 1 盖楼
-  let { page, page_size, state, keyword, page_id, sort = 0, start_date, end_date, format = 0 } = ctx.query
+  let { page, pageSize, state, keyword, pageId, sort = 0, start_date, end_date, format = 0 } = ctx.query
 
   const isVerified = await authIsVerified(ctx)
 
   // 过滤条件
   const options = {
-    sort: { create_at: 1 },
+    sort: { createAt: 1 },
     page: Number(page || 1),
-    limit: Number(page_size || config.BLOG.COMMENT_LIMIT),
+    limit: Number(pageSize || config.BLOG.COMMENT_LIMIT),
     lean: true,
-    select: '-type -page_id',
+    select: '-type -pageId',
     populate: [
       { path: 'forward', select: 'author.name' }
     ]
   }
 
   if ([0, 1, '0', '1'].includes(sort)) {
-    options.sort = { create_at: sort == 0 ? -1 : 1 }
+    options.sort = { createAt: sort == 0 ? -1 : 1 }
   } else if (sort == 2) {
-    options.sort = { likes: -1 }
+    options.sort = { ups: -1 }
   }
 
   // 评论查询条件
@@ -45,8 +45,8 @@ commentCtrl.list.GET = async (ctx, next) => {
     query.parent_id = { $exists: false }
   }
 
-  if (page_id) {
-    query.page_id = page_id
+  if (pageId) {
+    query.pageId = pageId
   }
 
   // 评论状态
@@ -68,7 +68,7 @@ commentCtrl.list.GET = async (ctx, next) => {
   if (start_date) {
     const $gte = new Date(start_date)
     if ($gte.toString() !== 'Invalid Date') {
-      query.create_at = { $gte }
+      query.createAt = { $gte }
     }
   }
 
@@ -76,7 +76,7 @@ commentCtrl.list.GET = async (ctx, next) => {
   if (end_date) {
     const $lte = new Date(end_date)
     if ($lte.toString() !== 'Invalid Date') {
-      query.create_at = Object.assign({}, query.create_at, { $lte })
+      query.createAt = Object.assign({}, query.createAt, { $lte })
     }
   }
   
@@ -95,10 +95,10 @@ commentCtrl.list.GET = async (ctx, next) => {
   let total = parentComments.length
 
   if (!isVerified) {
-    let { state, page_id, parent_id } = query
+    let { state, pageId, parent_id } = query
     let noPaginationQuery = { state }
-    if (page_id) {
-      noPaginationQuery.page_id = page_id
+    if (pageId) {
+      noPaginationQuery.pageId = pageId
     }
     if (format === 1) {
       noPaginationQuery.parent_id = parent_id
@@ -125,7 +125,7 @@ commentCtrl.list.GET = async (ctx, next) => {
       childComments = await CommentModel.find({
         parent_id: parent._id
       })
-      .sort('-create_at')
+      .sort('-createAt')
       .exec()
       .catch(err => {
         handleError({ ctx, err, message: '评论列表获取失败' })
@@ -134,7 +134,7 @@ commentCtrl.list.GET = async (ctx, next) => {
         child = child.toObject()
         if (child.state !== 1 && !isVerified) {
           delete child.content
-          delete child.rendered_content
+          delete child.renderedContent
         }
         return child
       })
@@ -162,7 +162,7 @@ commentCtrl.list.GET = async (ctx, next) => {
 commentCtrl.list.POST = async (ctx, next) => {
   let req = ctx.request
   let comment = req.body
-  let { content, author = {}, type, page_id, parent, forward } = comment
+  let { content, author = {}, type, pageId, parent, forward } = comment
   if (typeof author === 'string') {
     author = JSON.parse(author)
     comment.author = author
@@ -170,7 +170,7 @@ commentCtrl.list.POST = async (ctx, next) => {
   let { name, email, site } = author
 
   // 校验
-  if (![0, 1, '0', '1'].includes(type) || !page_id) {
+  if (![0, 1, '0', '1'].includes(type) || !pageId) {
     return handleError({ ctx, message: '少侠，您在哪个页面评论的？' })
   }
   if (!content) {
@@ -190,15 +190,15 @@ commentCtrl.list.POST = async (ctx, next) => {
               ctx.req.connection.socket.remoteAddress ||
               ctx.req.ip ||
               ctx.req.ips[0]).replace('::ffff:', '')
-  // const ip_location = geoip.lookup(ip)
-  const ip_location = 'Beijing'
+  // const location = geoip.lookup(ip)
+  const location = 'Beijing'
   comment.meta = comment.meta || {}
-  if (ip_location) {
-    comment.meta.ip_location = ip_location
+  if (location) {
+    comment.meta.location = location
   }
   comment.meta.ip = ip
   comment.meta.agent = req.headers['user-agent'] || comment.agent
-  comment.rendered_content = marked(content)
+  comment.renderedContent = marked(content)
   if (parent && !forward) {
     comment.forward = parent
   } else if (forward && !parent) {
@@ -212,13 +212,13 @@ commentCtrl.list.POST = async (ctx, next) => {
     })
 
   if (data) {
-    if (data.type === 0 && data.page_id) {
+    if (data.type === 0 && data.pageId) {
       // 如果是文章评论，则更新文章评论数量
-      await updateArticleCommentCount([comment.page_id])
+      await updateArticleCommentCount([comment.pageId])
     }
 
     data = await CommentModel.findById(data._id)
-      .select('-type -page_id')
+      .select('-type -pageId')
       .populate({ path: 'forward', select: 'author.name' })
       .exec().catch(err => {
         handleError({ ctx, err, message: '评论发布失败'})
@@ -276,14 +276,14 @@ commentCtrl.item.GET = async (ctx, next) => {
     query.state = 1
   }
   // 为该comment生成forward链
-  // 如果某一级forward的state!==1，把content和rendered_content去掉
+  // 如果某一级forward的state!==1，把content和renderedContent去掉
   const generateForwardComment = async (forward_id = '', isVerified = false) => {
     if (!forward_id) {
       return null
     }
     let Query = CommentModel.findById(forward_id)
     if (!isVerified) {
-      Query = Query.select('-content -page_id -id -type -sticky -update_at')
+      Query = Query.select('-content -pageId -id -type -sticky -updateAt')
     }
     let forward = await Query.exec()
     forward = forward && forward.toObject() || null
@@ -294,7 +294,7 @@ commentCtrl.item.GET = async (ctx, next) => {
       // 如果在前台获取，且评论未审核通过，获取详情的时候不返回内容
       if (forward.state !== 1 && !isVerified) {
         delete forward.content
-        delete forward.rendered_content
+        delete forward.renderedContent
         delete forward.state
       }
     }
@@ -305,7 +305,7 @@ commentCtrl.item.GET = async (ctx, next) => {
 
   // 前台获取详情不需要content
   if (!isVerified) {
-    Query = Query.select('forward rendered_content')
+    Query = Query.select('forward renderedContent')
   }
 
   let data = await Query
@@ -330,15 +330,15 @@ commentCtrl.item.PUT = async (ctx, next) => {
   if (!content) {
     return handleError({ ctx, message: '少侠，留下您的回复' })
   }
-  comment.rendered_content = marked(content)
+  comment.renderedContent = marked(content)
   let data = await CommentModel.findByIdAndUpdate(id, comment, { new: true })
     .exec()
     .catch(err => {
       handleError({ ctx, err, message: '评论修改失败' })
     })
   handleSuccess({ ctx, data, message: '评论修改成功' })
-  if (data && data.type === 0 && data.page_id) {
-    await updateArticleCommentCount([data.page_id])
+  if (data && data.type === 0 && data.pageId) {
+    await updateArticleCommentCount([data.pageId])
   }
 }
 
@@ -364,8 +364,8 @@ async function updateArticleCommentCount (article_ids = []) {
   }
   article_ids = [...new Set(article_ids)].filter(id => isObjectId(id))
   let counts = await CommentModel.aggregate([
-    { $match: { state: 1, page_id: { $in: article_ids } } },
-    { $group: { _id: '$page_id', total_count: { $sum: 1 } } }
+    { $match: { state: 1, pageId: { $in: article_ids } } },
+    { $group: { _id: '$pageId', total_count: { $sum: 1 } } }
   ]).exec().catch(err => {
     logger.warn(`更新文章评论数量前聚合评论数据操作失败， err: ${err}`)
   })

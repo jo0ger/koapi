@@ -32,10 +32,11 @@ export function isEmail (str = '') {
   return /^(\w-*\.*)+@(\w-?)+(\.\w{2,})+$/.test(str)
 }
 
-
-/* 将时间输出为统一的格式
- * @param fmt  yyyy-MM-dd hh:mm:ss:S q
- * @returns {*}
+/**
+ * 将时间输出为统一的格式
+ * @param  {Date | String} date
+ * @param  {String} fmt  参考yyyy-MM-dd hh:mm:ss:S q
+ * @returns {String}
  */
 export const fmtDate = (date, fmt = 'yyyy-MM-dd hh:mm') => {
   date = new Date(date)
@@ -57,4 +58,33 @@ export const fmtDate = (date, fmt = 'yyyy-MM-dd hh:mm') => {
     }
   }
   return fmt
+}
+
+/**
+ * Deep Copy
+ * @param {Object | Array} out
+ * @return {Object | Array} out
+ * @usage deepCopy({}[, obj, obj2, ...]) | deepCopy([][, arr1, arr2, ...])
+ * @return {Object | Array}
+ */
+export const deepCopy = function (out = {}) {
+  for (let i = 1; i < arguments.length; i++) {
+    const obj = arguments[i]
+
+    if (!obj) {
+      continue
+    }
+
+    for (let key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        if (typeof obj[key] === 'object') {
+          out[key] = Array.isArray(obj[key]) ? [] : {}
+          deepCopy(out[key], obj[key])
+        } else {
+          out[key] = obj[key]
+        }
+      }
+    }
+  }
+  return out
 }

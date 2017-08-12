@@ -19,14 +19,14 @@ optionCtrl.GET = async (ctx, next) => {
 
 // 新增配置信息
 optionCtrl.POST = async (ctx, next) => {
-  let { option, option: { title, site_url, banner_default_image } } = ctx.request.body
+  let { option, option: { title, siteUrl, bannerDefaultImg } } = ctx.request.body
   if (!title) {
     return handleError({ ctx, message: '缺少主标题' })
   }
-  if (!site_url) {
+  if (!siteUrl) {
     return handleError({ ctx, message: '缺少网站地址' })
   }
-  if (!banner_default_image) {
+  if (!bannerDefaultImg) {
     return handleError({ ctx, message: '缺少banner默认图' })
   }
   

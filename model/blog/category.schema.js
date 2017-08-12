@@ -9,8 +9,8 @@ import mongoosePaginate from 'mongoose-paginate'
 const categorySchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: String,
-  create_at: { type: Number, default: Date.now },
-  update_at: Number,
+  createAt: { type: Number, default: Date.now },
+  updateAt: Number,
   extends: [{ key: String, value: Object }]
 })
 

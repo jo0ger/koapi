@@ -23,7 +23,7 @@ likeCtrl.POST = async (ctx, next) => {
   let data = (
     isArticle ? ArticleModel : CommentModel
   )
-  .findByIdAndUpdate(id, { $inc: { [`${isArticle ? 'meta.likes' : 'likes'}`] : 1 } })
+  .findByIdAndUpdate(id, { $inc: { [`${isArticle ? 'meta.ups' : 'ups'}`] : 1 } })
   .exec()
   .catch(err => {
     handleError({ ctx, err, message: '点赞失败' })

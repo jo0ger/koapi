@@ -52,6 +52,7 @@ export default async (ctx, next) => {
 
   // 权限校验，排除所有非管理员的非GET请求，comment和like接口的POST请求除外，（前台需要评论）
   if (request.method !== 'GET') {
+    // 是否排除
     const hasExclude = exclude.find(({ url, type }) => {
       return request.url.includes(url) && type.includes(request.method)
     })
@@ -61,6 +62,8 @@ export default async (ctx, next) => {
         try {
           const decodedToken = await jwt.verify(token, AUTH.SECRET_KEY)
           if (decodedToken.exp > Math.floor(Date.now() / 1000)) {
+            // _verify 已验证权限
+            ctx._verify = true
             return next && next() || true
           }
         } catch (err) {

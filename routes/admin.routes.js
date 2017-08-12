@@ -11,4 +11,5 @@ const prefix = '/admin'
 export default router => {
   // 七牛云获取uptoken
   router.all(`${prefix}/qiniu`, adminControllers.qiniu)
+
 }
