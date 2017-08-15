@@ -12,13 +12,13 @@ const articleSchema = new mongoose.Schema({
   // 文章关键字（FOR SEO）
   keywords: [{ type: String }],
   // 文章摘要 (FOR SEO)
-  description: String,
+  description: { type: String, default: '' },
   // 文章原始markdown内容
   content: { type: String, required: true, validate: /\S+/ },
   // markdown渲染后的htmln内容
   renderedContent: { type: String, required: true, validate: /\S+/ },
   // 缩略图 （图片uid, 图片名称，图片URL， 图片大小）
-  thumb: { uid: String, title: String, url: String, size: Number },
+  thumb: { uid: String, title: { type: String, default: '' }, url: { type: String, default: '' }, size: Number },
   // 文章状态 （ 0 草稿 | 1 已发布 ）
   state: { type: Number, default: 0 },
   // 发布日期

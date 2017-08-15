@@ -7,13 +7,12 @@ import { handleRequest, handleSuccess, handleError } from '../../utils'
 import {
   ArticleModel, TagModel, CategoryModel
 } from '../../model'
-import authIsVerified from '../../middleware/auth'
 const statisticsCtrl = {}
 
 statisticsCtrl.GET = async (ctx, next) => {
   let query = {}
   // 如果未通过权限校验，将文章状态重置为1
-  if (!await authIsVerified(ctx)) {
+  if (!ctx._verify) {
     query.state = 1
   }
   let articleCount = await ArticleModel.where(query).count()

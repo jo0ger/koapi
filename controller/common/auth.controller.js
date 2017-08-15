@@ -4,9 +4,9 @@
  */
 
 import md5 from 'md5'
-import { AUTH } from '../../config'
 import { handleRequest, handleSuccess, handleError } from '../../utils'
 import { AuthModel } from '../../model'
+const { secretKey, expired, cookieName } = config.server.auth
 const authCtrl = {
   login: {},
   logout: {},
@@ -14,7 +14,7 @@ const authCtrl = {
 }
 
 function md5Encode (str = '') {
-  return md5(`${AUTH.SECRET_KEY}${str}`)
+  return md5(`${screteKey}${str}`)
 }
 
 // 获取个人信息
@@ -46,8 +46,8 @@ authCtrl.login.POST = async (ctx, next) => {
     const token = jwt.sign({
       id: auth._id, 
       name: auth.name
-    }, AUTH.SECRET_KEY, { expiresIn: AUTH.EXPIRED })
-    ctx.cookies.set(AUTH.COOKIE_NAME, token, {signed: true})
+    }, secretKey, { expiresIn: expired })
+    ctx.cookies.set(cookieName, token, {signed: true})
     handleSuccess({ ctx, data: { token }, message: '登录成功' })
   } else {
     handleError({ ctx, message: '少侠，我不认识你！' })
@@ -58,8 +58,8 @@ authCtrl.logout.GET = async (ctx, next) => {
   const token = jwt.sign({
     id: auth._id, 
     name: auth.name
-  }, AUTH.SECRET_KEY, { expiresIn: AUTH.EXPIRED })
-  ctx.cookies.set(AUTH.COOKIE_NAME, token, {signed: true})
+  }, secretKey, { expiresIn: expired })
+  ctx.cookies.set(cookieName, token, {signed: true})
   handleSuccess({ ctx, data: { token }, message: '登录成功' })
 } 
 

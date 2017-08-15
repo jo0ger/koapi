@@ -1,7 +1,9 @@
 {
   "name": "koapi",
   "version": "1.0.0",
+  "apiVersion": "v1.0",
   "description": "blog api , developing",
+  "author": "Jooger",
   "main": "index.js",
   "scripts": {
     "start": "cross-env NODE_ENV=development ./node_modules/.bin/nodemon bin/run",
@@ -16,12 +18,12 @@
     "koa",
     "api"
   ],
-  "author": "Jooger",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/jo0ger/koapi/issues"
   },
   "homepage": "https://github.com/jo0ger/koapi#readme",
+  "site": "http://api.jooger.me",
   "dependencies": {
     "highlight.js": "^9.10.0",
     "jsonwebtoken": "^7.3.0",

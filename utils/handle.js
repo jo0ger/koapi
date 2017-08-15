@@ -3,8 +3,7 @@
  * @author Jooger
  */
 
-import config from '../config'
-const { METHOD_NOT_ALLOWED, FAILED } = config.SERVER.CODE
+const { METHOD_NOT_ALLOWED, FAILED } = config.server.code
 
 export async function handleRequest ({ ctx, type, next }) {
   const method = ctx.request.method
@@ -24,10 +23,10 @@ export function handleSuccess ({ ctx, message = '请求成功', data = {} }) {
   })
 }
 
-export function handleError ({ ctx, message = '请求失败', err = {} }) {
+export function handleError ({ ctx, message = '请求失败', err = {} }, end = false) {
   logger.error(message)
   Object.keys(err).length && console.error(err)
-  ctx.failed({
+  !end && ctx.failed({
     message,
     error: err || {}
   })

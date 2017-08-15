@@ -6,8 +6,6 @@
 
 import { commonControllers } from '../controller'
 
-const prefix = 'blog'
-
 export default router => {
 
   // Auth

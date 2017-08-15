@@ -5,15 +5,34 @@
 
 import { handleRequest, handleSuccess, handleError, isObjectId } from '../../utils'
 import { CategoryModel, ArticleModel } from '../../model'
-import authIsVerified from '../../middleware/auth'
+import { Validator } from '../../utils'
 const categoryCtrl = { list: {}, item: {} }
+
+// 校验配置
+const validateConfig = {
+  id: {
+    type: 'objectId',
+    required: true,
+    message: {
+      required: '分类ID不能为空',
+      type: '非预期的分类ID'
+    }
+  },
+  name: {
+    type: 'string',
+    required: true,
+    message: '分类名称不能为空'
+  }
+}
+const validator = new Validator(validateConfig)
 
 // 获取分类列表，不分页
 categoryCtrl.list.GET = async (ctx, next) => {
-  let { keyword = '' } = ctx.query
-  const keywordReg = new RegExp(keyword)
-  const query = {
-    $or: [
+  const { keyword = '' } = ctx.query
+  const query = {}
+  if (keyword) {
+    const keywordReg = new RegExp(keyword)
+    query.$or = [
       { name: keywordReg },
       { description: keywordReg }
     ]
@@ -32,9 +51,9 @@ categoryCtrl.list.GET = async (ctx, next) => {
 
   // 查询article中的category的聚合数据
   const getCatesCount = async (ctx, categories) => {
-    let $match = {}
-    if (!await authIsVerified(ctx)) {
-      $match = { state: 1 }
+    const $match = {}
+    if (!ctx._verify) {
+      $match.state = 1
     }
     
     await ArticleModel.aggregate([
@@ -111,6 +130,7 @@ categoryCtrl.item.GET = async (ctx, next) => {
     return
   }
 
+  // 获取该分类下文章数量
   const findArticles = async (data) => {
     await ArticleModel.find({ category: id })
       .select('-category')
@@ -130,7 +150,7 @@ categoryCtrl.item.GET = async (ctx, next) => {
       })
   }
 
-  let result = await CategoryModel.findById(id).exec()
+  const result = await CategoryModel.findById(id).exec()
     .catch(err => {
       handleError({ ctx, message: '分类详情获取失败', err })
     })
@@ -143,19 +163,19 @@ categoryCtrl.item.GET = async (ctx, next) => {
 
 // 修改单个分类
 categoryCtrl.item.PUT = async (ctx, next) => {
-  let { id } = ctx.params
-  let category = ctx.request.body
-  let { name } = category
-  if (!isObjectId(id)) {
-    handleError({ ctx, message: '缺少分类ID' })
-    return
-  }
-  if (!name) {
-    handleError({ ctx, message: '缺少分类名称' })
-    return
+  const { id } = ctx.params
+  const category = ctx.request.body
+  const { name } = category
+
+  const { success, message } = validator.validate({ id, name })
+  if (!success) {
+    return handleError({ ctx, message })
   }
 
-  const putCategory = async () => {
+  const { length } = await CategoryModel.find({ name }).exec().catch(err => {
+    handleError({ ctx, err, message: '修改分类失败' })
+  })
+  if (!length) {
     await CategoryModel.findByIdAndUpdate(id, category, { new: true }).exec()
       .then(data => {
         handleSuccess({ ctx, message: '修改分类成功', data })
@@ -163,13 +183,6 @@ categoryCtrl.item.PUT = async (ctx, next) => {
       .catch(err => {
         handleError({ ctx, message: '修改分类失败' })
       })
-  }
-
-  let { length } = await CategoryModel.find({ name }).exec().catch(err => {
-    handleError({ ctx, err, message: '修改分类失败' })
-  })
-  if (!length) {
-    await putCategory()
   } else {
     handleError({ ctx, message: '该分类名称已存在' })
   }

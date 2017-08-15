@@ -4,13 +4,12 @@
 
 import md5 from 'md5'
 import mongoose from 'mongoose'
-import { AUTH } from '../../config'
 
 const authSchema = new mongoose.Schema({
-  name: { type: String, default: AUTH.DEFAULT_NAME, required: true },
+  name: { type: String, default: config.server.auth.defaultName, required: true },
   password: {
     type: String,
-    default: md5(`${AUTH.SECRET_KEY}${AUTH.DEFAULT_PASSWORD}`),
+    default: md5(`${config.server.auth.secretKey}${config.server.auth.defaultPassword}`),
     required: true
   },
   slogan: { type: String, default: '' },

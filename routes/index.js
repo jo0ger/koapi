@@ -3,12 +3,11 @@
  * @author Jooger
  */
 
-import { INFO, SERVER } from '../config'
 import controllers from '../controller'
 import { auth, setHeader } from '../middleware'
 import { generate, firstUpperCase } from '../utils'
 
-const { UNAUTHORIZED, NOT_FOUND } = SERVER.CODE
+const { UNAUTHORIZED, NOT_FOUND } = config.server.code
 
 export default router => {
   // 全局拦截

@@ -3,19 +3,21 @@
  * @author Jooger
  */
 
+import path from 'path'
+import packageInfo from '../package.json'
+
 export default {
-  INFO: {
-    name: 'Koapi',
-    version: '1.0.0',
-    author: 'Jooger',
-    site: 'http://jooger.me'
+  info: {
+    name: packageInfo.name,
+    version: packageInfo.version,
+    author: packageInfo.author,
+    site: packageInfo.site
   },
-  SERVER: {
-    ROOT_PATH: __dirname,
-    PORT: 5000,
-    PREFIX: '/api',
-    VERSION: 'v1.0',
-    CODE: {
+  server: {
+    rootPath: path.resolve(__dirname, '../'),
+    port: 5000,
+    version: packageInfo.apiVersion,
+    code: {
       FAILED: -1,
       SUCCESS: 0,
       INVALID_REQUEST: 400,
@@ -23,32 +25,50 @@ export default {
       NOT_FOUND: 404,
       METHOD_NOT_ALLOWED: 405,
       INTERNAL_SERVER_ERROR: 500
+    },
+    mongodb: {
+      uri: 'mongodb://127.0.0.1/koapi'
+    },
+    auth: {
+      cookirName: 'jooger_auth',
+      secretKey: `${packageInfo.name} ${packageInfo.version}`,
+      expired: 60 * 60 * 24 * 365,
+      defaultName: 'admin',
+      defaultPassword: 'admin'
     }
   },
-  BLOG: {
-    LIMIT: 10,
-    COMMENT_LIMIT: 99,
-    dateFormat: 'yyyy-MM-dd',
-    DEFAULT_CATEGORY: [
-      { name: 'CODE', description: 'CODE', extends: [{ color: '#108ee9'}] },
-      { name: 'THINK', description: 'THINK', extends: [{ color: '#108ee9'}] }
-    ]
-  },
-  MONGODB: {
-    URI: 'mongodb://127.0.0.1/koapi'
-  },
-  AUTH: {
-    COOKIE_NAME: 'jooger_auth',
-    SECRET_KEY: 'Koapi',
-    EXPIRED: 60 * 60 * 24 * 365,
-    DEFAULT_NAME: 'admin',
-    DEFAULT_PASSWORD: 'admin'
-  },
-  QINIU: {
-    accessKey: 'yvmsQiG7qdCesWCii3nMEMHK-8Ifi7EyRlcY1FmK',
-    secretKey: 'G8pkqYNw9OFxcGUvwL_Gia7b_bhV_5ejMxsNZENl',
-    bucket: 'jooger',
-    origin: 'http://oqtnezwt7.bkt.clouddn.com',  // domain
-    uploadUrl: 'http://up-z1.qiniu.com/'
+  thirdParty: {
+    qiniu: {
+      accessKey: 'yvmsQiG7qdCesWCii3nMEMHK-8Ifi7EyRlcY1FmK',
+      secretKey: 'G8pkqYNw9OFxcGUvwL_Gia7b_bhV_5ejMxsNZENl',
+      bucket: 'jooger',
+      origin: 'http://oqtnezwt7.bkt.clouddn.com',  // domain
+      uploadUrl: 'http://up-z1.qiniu.com/'
+    },
+    github: {
+      authorizeURL: 'http://github.com/login/oauth/authorize',
+      accessTokenURL: 'https://github.com/login/oauth/access_token',
+      userInfoUrl: 'https://api.github.com/user',
+      clientId: 'b4983366c4c7549a09f1',
+      clientSecret: '76fd8c26a21659d7eb925af0ed3498eabed49277',
+      scope: ['user']
+    }
   }
+  // module: {
+  //   common: {
+  //     dateFormat: 'yyyy-MM-dd',
+  //   },
+  //   blog: {
+  //     postLimit: 20,
+  //     commentlimit: 99
+  //     // defaultCategory: [
+  //     //   { name: 'CODE', description: 'CODE IS THINK', extends: [{ color: '#108ee9'}] },
+  //     //   { name: 'THINK', description: 'THINK CHANGE CODE', extends: [{ color: '#108ee9'}] }
+  //     // ]
+  //   },
+  //   project: {},
+  //   music: {},
+  //   vps: {},
+  //   picture: {}
+  // }
 }

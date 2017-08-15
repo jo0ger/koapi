@@ -6,12 +6,31 @@
 import { handleRequest, handleSuccess, handleError, isObjectId } from '../../utils'
 import { TagModel, ArticleModel } from '../../model'
 import authIsVerified from '../../middleware/auth'
+import { Validator } from '../../utils'
 const tagCtrl = { list: {}, item: {} }
+
+// 校验配置
+const validateConfig = {
+  id: {
+    type: 'objectId',
+    required: true,
+    message: {
+      required: '分类ID不能为空',
+      type: '非预期的分类ID'
+    }
+  },
+  name: {
+    type: 'string',
+    required: true,
+    message: '分类名称不能为空'
+  }
+}
+const validator = new Validator(validateConfig)
 
 // 获取标签列表，不分页
 tagCtrl.list.GET = async (ctx, next) => {
-  let { keyword } = ctx.query
-  let query = {}
+  const { keyword } = ctx.query
+  const query = {}
   if (keyword) {
     const keywordReg = new RegExp(keyword)
     query.$or = [
@@ -46,7 +65,7 @@ tagCtrl.list.GET = async (ctx, next) => {
       } }
     ]).exec().then(counts => {
       tags = tags.map(tag => {
-        let matched = counts.find(count => count._id.toString() === tag._id.toString())
+        const matched = counts.find(count => count._id.toString() === tag._id.toString())
         tag = tag.toObject()
         tag.count = matched && matched.total_count || 0
         return tag
@@ -55,7 +74,7 @@ tagCtrl.list.GET = async (ctx, next) => {
     })
   }
 
-  let tags = await TagModel.find(query).exec().catch(err => {
+  const tags = await TagModel.find(query).exec().catch(err => {
     handleError({ ctx, err, message: '标签列表获取失败' })
   })
   await getTagsCount(ctx, tags)
@@ -64,27 +83,24 @@ tagCtrl.list.GET = async (ctx, next) => {
 
 // 新建标签
 tagCtrl.list.POST = async (ctx, next) => {
-  let tag = ctx.request.body
-  let { name } = tag
+  const tag = ctx.request.body
+  const { name } = tag
 
   if (!name) {
     handleError({ ctx, message: '缺少标签名称' })
     return
   }
-  // 保存tag
-  const saveTag = async () => {
+
+  const { length } = await TagModel.find({ name }).exec().catch(err => {
+    handleError({ ctx, err, message: '新建标签失败' })
+  })
+
+  if (!length) {
     await TagModel.create(tag).then(data => {
       handleSuccess({ ctx, message: '新建标签成功', data })
     }).catch(err => {
       handleError({ ctx, err, message: '新建标签失败' })
     })
-  }
-
-  let { length } = await TagModel.find({ name }).exec().catch(err => {
-    handleError({ ctx, err, message: '新建标签失败' })
-  })
-  if (!length) {
-    await saveTag()
   } else {
     handleError({ ctx, message: '该标签名称已存在' })
   }
@@ -92,12 +108,12 @@ tagCtrl.list.POST = async (ctx, next) => {
 
 // 批量删除标签
 tagCtrl.list.DELETE = async (ctx, next) => {
-  let { tags } = ctx.request.body
+  const { tags } = ctx.request.body
   if (!tags || !tags.length) {
     handleError({ ctx, message: '未选中标签' })
     return
   }
-  let data = await TagModel.remove({ _id: { $in: tags }}).catch(err => {
+  const data = await TagModel.remove({ _id: { $in: tags }}).catch(err => {
     handleError({ ctx, message: `${tags.length>1?'批量':''}删除标签失败`, err })
   })
 
@@ -106,7 +122,7 @@ tagCtrl.list.DELETE = async (ctx, next) => {
 
 // 获取单个标签详情
 tagCtrl.item.GET = async (ctx, next) => {
-  let { id } = ctx.params
+  const { id } = ctx.params
   if (!isObjectId(id)) {
     handleError({ ctx, message: '缺少标签ID' })
     return
@@ -144,16 +160,13 @@ tagCtrl.item.GET = async (ctx, next) => {
 
 // 修改单个标签
 tagCtrl.item.PUT = async (ctx, next) => {
-  let { id } = ctx.params
-  let tag = ctx.request.body
-  let { name } = tag
-  if (!isObjectId(id)) {
-    handleError({ ctx, message: '缺少标签ID' })
-    return
-  }
-  if (!name) {
-    handleError({ ctx, message: '缺少标签名称' })
-    return
+  const { id } = ctx.params
+  const tag = ctx.request.body
+  const { name } = tag
+
+  const { success, message } = validator.validate({ id, name })
+  if (!success) {
+    return handleError({ ctx, message })
   }
 
   const putTag = async () => {

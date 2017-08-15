@@ -1,9 +1,14 @@
 /**
  * @desc 音乐 api routes
  * @author Jooger
- * @date 10 Aug 2017
+ * @date 14 Aug 2017
  */
 
+
+import { musicControllers } from '../controller'
+
+const prefix = 'music'
+
 export default router => {
-  // TODO: 网易云音乐
+
 }

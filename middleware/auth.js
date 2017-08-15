@@ -1,13 +1,12 @@
 /**
- * @desc token验证中间件
+ * @desc token验证
  * @author Jooger
  */
 
 import jwt from 'jsonwebtoken'
-import { AUTH, SERVER } from '../config'
 import { handleError } from '../utils'
 
-const UNAUTHORIZED = SERVER.CODE.UNAUTHORIZED
+const UNAUTHORIZED = config.server.code.UNAUTHORIZED
 
 // 需要排除验证的url和method
 const exclude = [
@@ -36,14 +35,6 @@ export default async (ctx, next) => {
   const { request } = ctx
   const _DEV_ = request.query._DEV_ || request.body._DEV_
 
-  function fail () {
-    logger.error('权限校验失败')
-    ctx.send(UNAUTHORIZED, {
-      code: UNAUTHORIZED,
-      message: '少侠，我不认识你！'
-    })
-  }
-
   // 如果请求时query或者body上加上_DEV_，并且是开发环境，则全部权限都通过
   // 生产环境下则无此限制，主要是为了开发方便
   if (_DEV_ && process.env.NODE_ENV === 'development') {
@@ -60,7 +51,7 @@ export default async (ctx, next) => {
       const token = _authToken(request)
       if (token) {
         try {
-          const decodedToken = await jwt.verify(token, AUTH.SECRET_KEY)
+          const decodedToken = await jwt.verify(token, config.server.auth.secretKey)
           if (decodedToken.exp > Math.floor(Date.now() / 1000)) {
             // _verify 已验证权限
             ctx._verify = true
@@ -72,6 +63,14 @@ export default async (ctx, next) => {
       }
       return fail()
     }
+  }
+
+  function fail () {
+    logger.error('权限校验失败')
+    ctx.send(UNAUTHORIZED, {
+      code: UNAUTHORIZED,
+      message: '少侠，我不认识你！'
+    })
   }
 
   return next && next() || true

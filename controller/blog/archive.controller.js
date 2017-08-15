@@ -3,7 +3,6 @@
  */
 
 import { handleRequest, handleSuccess, handleError } from '../../utils'
-import config from '../../config'
 import { ArticleModel } from '../../model'
 import authIsVerified from '../../middleware/auth'
 const archivesCtrl = {}
@@ -15,7 +14,7 @@ archivesCtrl.GET = async (ctx, next) => {
     $match = { state: 1 }
   }
   let $page = Number(page || 1)
-  let $limit = Number(pageSize || config.BLOG.LIMIT)
+  let $limit = Number(pageSize || config.module.blog.postLimit)
   let $skip = ($page - 1) * $limit
 
   let total = await ArticleModel.count($match).exec()

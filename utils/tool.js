@@ -17,16 +17,14 @@ export const firstUpperCase = (str) => {
  * @param {*} obj 检测对象
  * @param {String | Array[String]} type 类型（数组）
  */
-export const isType = (obj = {}, type = 'Object') => {
+export const isType = (obj, type = 'Object') => {
   if (!Array.isArray(type)) {
     type = [type]
   }
   return type.some(t => Object.prototype.toString.call(obj) === `[object ${firstUpperCase(t)}]`)
 }
 
-export function isObjectId (str = '') {
-  return mongoose.Types.ObjectId.isValid(str)
-}
+export const isObjectId = (str = '') => mongoose.Types.ObjectId.isValid(str)
 
 export function isEmail (str = '') {
   return /^(\w-*\.*)+@(\w-?)+(\.\w{2,})+$/.test(str)

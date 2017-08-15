@@ -7,51 +7,55 @@ import minimist from 'minimist'
 
 import config from './config'
 import db from './mongoose'
-import routes from './routes'
-import { logger, handleError } from './utils'
 
 const app = new Koa()
-const router = new Router({
-  prefix: `/${config.SERVER.VERSION}`
-})
+global.config = config
+global.logger = require('./utils').logger
 
-global.logger = logger
+async function start () {
 
-// 数据库连接
-db.init()
+  // 数据库连接
+  await db.init()
 
-// middlewares
-app.use(bodyparser())
-app.use(httpLogger())
-app.use(respond({
-  methods: {
-    success: (ctx, body) => {
-      body = Object.assign({}, {
-        code: config.SERVER.CODE.SUCCESS
-      }, body)
-      ctx.send(200, body)
-    },
-    failed: (ctx, body) => {
-      body = Object.assign({}, {
-        code: config.SERVER.CODE.FAILED
-      }, body)
-      ctx.send(200, body)
+  // middlewares
+  app.use(bodyparser())
+  app.use(httpLogger())
+  app.use(respond({
+    methods: {
+      success: (ctx, body) => {
+        body = Object.assign({}, {
+          code: config.server.code.SUCCESS
+        }, body)
+        ctx.send(200, body)
+      },
+      failed: (ctx, body) => {
+        body = Object.assign({}, {
+          code: config.server.code.FAILED
+        }, body)
+        ctx.send(200, body)
+      }
     }
-  }
-}))
+  }))
 
-// routes 绑定
-routes(router)
-app.use(router.routes(), router.allowedMethods())
+  // routes 绑定
+  const router = new Router({
+    prefix: `/${config.server.version}`
+  })
+  require('./routes')(router)
+  app.use(router.routes(), router.allowedMethods())
 
-// 错误监听
-app.on('error', (err, ctx) => {
-  console.log(err);
-  logger.error('server error', err)
-})
+  // 错误监听
+  app.on('error', (err, ctx) => {
+    console.log(err);
+    logger.error('server error', err)
+  })
 
-// 设置 Cookie 签名密钥
-// 签名密钥只在配置项 signed 参数为真是才会生效
-app.keys = [config.AUTH.SECRET_KEY]
+  // 设置 Cookie 签名密钥
+  // 签名密钥只在配置项 signed 参数为真是才会生效
+  app.keys = [config.server.auth.secretKey]
+
+}
+
+start()
 
 export default app

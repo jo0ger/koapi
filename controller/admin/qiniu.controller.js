@@ -2,10 +2,10 @@
  * 七牛获取上传配置
  */
 
-import qiniu from 'qn'
-import { QINIU } from '../../config'
+import qn from 'qn'
 import { handleRequest, handleSuccess, handleError } from '../../utils'
-const client = qiniu.create(QINIU)
+const qiniuConfig = config.thirdParty.qiniu
+const client = qn.create(qiniuConfig)
 const qiniuCtrl = {}
 
 qiniuCtrl.GET = async (ctx, next) => {
@@ -14,9 +14,9 @@ qiniuCtrl.GET = async (ctx, next) => {
     message: '获取七牛uptoken成功',
     data: {
       uptoken: client.uploadToken(),
-      bucket: QINIU.bucket,
-      domain: QINIU.origin,
-      uploadUrl: QINIU.uploadUrl
+      bucket: qiniuConfig.bucket,
+      domain: qiniuConfig.origin,
+      uploadUrl: qiniuConfig.uploadUrl
     }
   })
 }

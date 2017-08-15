@@ -15,7 +15,10 @@ const schemas = {
 }
 
 Object.keys(schemas).forEach(key => {
-  models[`${key}Model`] = mongoose.model(key, buildSchema(schemas[key]))
+  const schema = buildSchema(schemas[key])
+  if (schema) {
+    models[`${key}Model`] = mongoose.model(key, schema)
+  }
 })
 
 // 构建schema

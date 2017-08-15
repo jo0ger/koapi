@@ -4,9 +4,9 @@
  */
 
 import { handleRequest, handleSuccess, handleError, isObjectId, isType, marked, createObjectId } from '../../utils'
-import config from '../../config'
 import { ArticleModel, CategoryModel, TagModel, CommentModel } from '../../model'
-import authIsVerified from '../../middleware/auth'
+import { Validator } from '../../utils'
+
 const articleCtrl = { list: {}, item: {} }
 
 // 校验配置
@@ -14,7 +14,10 @@ const validateConfig = {
   id: {
     type: 'objectId',
     required: true,
-    message: '文章ID不能为空'
+    message: {
+      required: '文章ID不能为空',
+      type: '非预期的文章ID'
+    }
   },
   title: {
     type: 'string',
@@ -28,16 +31,30 @@ const validateConfig = {
   },
   tag: {
     type: 'array',
-    required: true,
-    validate (value) {
-      return value.length > 1
-    },
     message: {
-      required: '标签不能为空',
-      validate: '标签数组的长度最少为2'
+      type: '标签类型必须是Array类型'
+    }
+  },
+  category: {
+    type: 'objectId',
+    message: {
+      type: '分类类型必须是objectId类型'
+    }
+  },
+  keywords: {
+    type: 'array',
+    message: {
+      type: '关键词类型必须是Array类型'
+    }
+  },
+  extends: {
+    type: 'array',
+    message: {
+      type: '扩展项类型必须是Array类型'
     }
   }
 }
+const validator = new Validator(validateConfig)
 
 /**
  * @desc 根据文章ID删除评论
@@ -74,7 +91,7 @@ articleCtrl.list.GET = async (ctx, next) => {
   const options = {
     sort: { createAt: -1 },
     page: Number(page || 1),
-    limit: Number(pageSize || config.BLOG.LIMIT),
+    limit: Number(pageSize || config.module.blog.postLimit),
     populate: [
       { path: 'category', select: 'name description extends' },
       { path: 'tag', select: 'name description extends' }
@@ -85,7 +102,7 @@ articleCtrl.list.GET = async (ctx, next) => {
   const query = {}
 
   // 文章状态
-  if (['0', '1'].includes(state)) {
+  if (['0', '1', 0, 1].includes(state)) {
     query.state = state
   }
 
@@ -200,7 +217,7 @@ articleCtrl.list.GET = async (ctx, next) => {
 
 /**
  * @desc 新建草稿
- * @type GET
+ * @type POST
  * @param {String} [required] title                 标题
  * @param {String} [required] content               内容
  * @param {Array} [options] keywords                关键词 eg. ['Vue', 'React']
@@ -213,15 +230,10 @@ articleCtrl.list.GET = async (ctx, next) => {
 articleCtrl.list.POST = async (ctx, next) => {
   const article = ctx.request.body
   const { title, content, category, tag } = article
-  if (!title) {
-    return handleError({ ctx, message: '缺少文章标题' })
-  } else if (!content) {
-    return handleError({ ctx, message: '缺少文章内容' })
-  } else if (tag && !isType(tag, 'array')) {
-    return handleError({ ctx, message: '标签参数错误，期望值：Array' })
+  const { success, message } = validator.validate(article, ['title', 'content', 'tag', 'category', 'keywords', 'extends'])
+  if (!success) {
+    return handleError({ ctx, message })
   }
-
-  article.renderedContent = marked(content)
 
   // 分类 必须是objectId类型
   if (category && !isObjectId(category)) {
@@ -239,6 +251,8 @@ articleCtrl.list.POST = async (ctx, next) => {
 
   const action = article.state === 1 ? '新建文章（已发布）' : '新建草稿'
 
+  article.renderedContent = content && marked(content) || ''
+
   await new ArticleModel(article).save()
     .then(data => {
       handleSuccess({ ctx, data, message: `${action}成功` })
@@ -255,7 +269,7 @@ articleCtrl.list.PATCH = async (ctx, next) => {
     return handleError({ ctx, message: '未选中文章' })
   }
   let update = {}
-  if ([-1, 0, 1, '-1', '0', '1'].includes(state)) {
+  if ([0, 1, '0', '1'].includes(state)) {
     update.state = Number(state)
   }
   const action = state === 1
@@ -296,14 +310,18 @@ articleCtrl.list.DELETE = async (ctx, next) => {
     })
 }
 
-// 获取单篇文章详情
+/**
+ * @desc 获取文章详情
+ * @type GET
+ * @param {String} [required] id                   文章ID
+ */
 articleCtrl.item.GET = async (ctx, next) => {
-  let { id } = ctx.params
-  if (!isObjectId(id)) {
-    return handleError({ ctx, message: '缺少文章id' })
-  }
+  const { id } = ctx.params
 
-  const isVerified = await authIsVerified(ctx)
+  const { success, message } = validator.validate({ id }, 'id')
+  if (!success) {
+    return handleError({ ctx, message })
+  }
 
   // 获取相关文章
   const getRelatedArticles = async (data) => {
@@ -315,18 +333,16 @@ articleCtrl.item.GET = async (ctx, next) => {
         .then(articles => {
           data.related = articles
         })
-        .catch(err => {
-          console.error(err)
-          logger.error(`相关文章获取失败,id:${data._id}`)
-        })
+        .catch(err => (handleError({ err, message: `相关文章获取失败,id:${data._id}` })))
     }
   }
 
+  // 获取相邻的文章
   const getSiblingArticles = async (data) => {
     if (data && data._id) {
-      let query = {}
+      const query = {}
       // 如果未通过权限校验，将文章状态重置为1
-      if (!isVerified) {
+      if (!ctx._verify) {
         query.state = 1
       }
       let prev = await ArticleModel.findOne(query)
@@ -347,15 +363,14 @@ articleCtrl.item.GET = async (ctx, next) => {
 
   let data = null
 
-  if (!isVerified) {
+  // 只有前台博客访问文章的时候pv才+1
+  if (!ctx._verify) {
     data = await ArticleModel.findByIdAndUpdate(id, { $inc: { 'meta.pvs': 1 } }, { new: true })
       .select('-content') // 不返回content
       .populate('category tag')
       .exec()
       .catch(err => handhandleError({ ctx, err, message: '文章详情获取失败' }))
-    if (data) {
-      data = data.toObject()
-    }
+    data && (data = data.toObject())
     await getRelatedArticles(data)
     await getSiblingArticles(data)
   } else {
@@ -373,24 +388,44 @@ articleCtrl.item.GET = async (ctx, next) => {
 }
 
 // 修改单篇文章
+/**
+ * @desc 修改文章内容
+ * @type PUT
+ * @param {String} [required] id                  文章ID
+ * @param {String} [required] title                 标题
+ * @param {String} [required] content               内容
+ * @param {Array} [options] keywords                关键词 eg. ['Vue', 'React']
+ * @param {String} [options] description            简介
+ * @param {String} [options] category               分类 [必须是id]
+ * @param {Array} [options] tag                     标签 eg. ['askj2jhasd123123', '12312klsadkjasdj'] 
+ * @param {Object} [options] thumb                  缩略图 eg. { uid: '', title: '', url: '', size: 123 }
+ * @param {Array} [options] extends                 扩展项 eg. [{ key: 'color', value: '#fff' }]
+ */
 articleCtrl.item.PUT = async (ctx, next) => {
-  let { id } = ctx.params
-  let article = ctx.request.body
-  let { title, content } = article
-  if (!isObjectId(id)) {
-    return handleError({ ctx, message: '缺少文章id' })
-  }
-  if (!title) {
-    return handleError({ ctx, message: '缺少文章标题' })
-  }
-  if (!content) {
-    return handleError({ ctx, message: '缺少文章内容' })
-  }
-  article.renderedContent = marked(content)
+  const { id } = ctx.params
+  const article = ctx.request.body
+  const { title, content, category, tag } = article
 
-  if (!article.category || !isObjectId(article.category)) {
+  const { success, message } = validator.validate({ id, ...article })
+  if (!success) {
+    return handleError({ ctx, message })
+  }
+
+  // 分类 必须是objectId类型
+  if (category && !isObjectId(category)) {
     delete article.category
   }
+
+  // 标签
+  if (tag) {
+    article.tag = tag.slice().map((item, index) => {
+      if (!isObjectId(item)) {
+        tag.splice(index, 1, null)
+      }
+    }).filter(item => !!item)
+  }
+
+  article.renderedContent = marked(content)
 
   await ArticleModel.findByIdAndUpdate(id, article, { new: true })
     .populate({ path: 'category', select: 'name description extends' })
@@ -404,12 +439,13 @@ articleCtrl.item.PUT = async (ctx, next) => {
     })
 }
 
-// 修改单篇文章(发布状态， 是否公开， 私密密码)
+// 修改单篇文章(发布状态)
 articleCtrl.item.PATCH = async (ctx, next) => {
   const { id } = ctx.params
-  const { state, isPublic, password } = ctx.request.body
-  if (!isObjectId(id)) {
-    return handleError({ ctx, message: '缺少文章id' })
+  const { state } = ctx.request.body
+  const { success, message } = validator.validate(ctx.params, 'id')
+  if (!success) {
+    return handleError({ ctx, message })
   }
 
   const params = {}
@@ -419,11 +455,6 @@ articleCtrl.item.PATCH = async (ctx, next) => {
   }
 
   params.state = state
-
-  if (isType(isPublic, 'boolean')) {
-    params.public = isPublic
-    params.password = password
-  }
 
   await ArticleModel.findByIdAndUpdate(id, params, { new: true })
     .populate({ path: 'category', select: 'name description extends' })
@@ -437,11 +468,16 @@ articleCtrl.item.PATCH = async (ctx, next) => {
     })
 } 
 
-// 删除单篇文章
+/**
+ * @desc 删除单篇文章
+ * @type GET
+ * @param {String} [required] id                   文章ID
+ */
 articleCtrl.item.DELETE = async (ctx, next) => {
-  let { id } = ctx.params
-  if (!isObjectId(id)) {
-    return handleError({ ctx, message: '缺少文章id' })
+  const { id } = ctx.params
+  const { success, message } = validator.validate(ctx.params, 'id')
+  if (!success) {
+    return handleError({ ctx, message })
   }
 
   await ArticleModel.remove({ _id: id }).exec()
