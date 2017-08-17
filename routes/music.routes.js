@@ -6,7 +6,7 @@
 
 
 import { musicControllers } from '../controller'
-console.log(musicControllers)
+
 const prefix = 'music'
 
 export default router => {
