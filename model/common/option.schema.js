@@ -28,10 +28,32 @@ const optionSchema = new mongoose.Schema({
     postLimit: { type: Number, default: 10 },
     commentlimit: { type: Number, default: 100 }
   },
-  vps: {},
+  vps: {
+    apiKey: { type: String, default: '' }
+  },
   project: {},
-  music: {},
-  gallery: {}
+  music: {
+    playListId: { type: String, default: '' }
+  },
+  gallery: {},
+  thirdParty: {
+    qiniu: {
+      accessKey: { type: String, default: 'yvmsQiG7qdCesWCii3nMEMHK-8Ifi7EyRlcY1FmK' },
+      secretKey: { type: String, default: 'G8pkqYNw9OFxcGUvwL_Gia7b_bhV_5ejMxsNZENl' },
+      defaultBucket: { type: String, default: '' },
+      avaliableBuckets: [{ type: String, default: '' }],
+      origin: { type: String, default: 'http://oqtnezwt7.bkt.clouddn.com' },
+      uploadUrl: { type: String, default: 'http://up-z1.qiniu.com/' }
+    },
+    github: {
+      authorizeURL: { type: String, default: 'http://github.com/login/oauth/authorize' },
+      accessTokenURL: { type: String, default: 'https://github.com/login/oauth/access_token' },
+      userInfoUrl: { type: String, default: 'https://api.github.com/user' },
+      clientId: { type: String, default: 'b4983366c4c7549a09f1' },
+      clientSecret: { type: String, default: '76fd8c26a21659d7eb925af0ed3498eabed49277' },
+      scope: [{ type: String, default: 'user' }]
+    }
+  }
 })
 
 export default optionSchema

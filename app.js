@@ -1,3 +1,8 @@
+/**
+ * @desc Koapi entry
+ * @author Jooger
+ */
+
 import Koa from 'koa'
 import Router from 'koa-router'
 import bodyparser from 'koa-bodyparser'
@@ -5,17 +10,15 @@ import httpLogger from 'koa-logger'
 import respond from 'koa-respond'
 import minimist from 'minimist'
 
-import config from './config'
-import db from './mongoose'
-
 const app = new Koa()
-global.config = config
+
+global.config = require('./config')
 global.logger = require('./utils').logger
 
 async function start () {
 
   // 数据库连接
-  await db.init()
+  await require('./mongoose').init()
 
   // middlewares
   app.use(bodyparser())

@@ -99,7 +99,8 @@ function typeFilter (value, key, conf, result) {
   const typeMessage = conf.message.type || ''
   const { type, required } = conf
   let error = false
-  if (required) {
+  // required或者有值的情况下，校验类型
+  if (required || value) {
     if (types.find(item => item === type)) {
       switch (type) {
         case 'objectId':

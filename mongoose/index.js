@@ -45,7 +45,7 @@ async function optionHook () {
   let option = await OptionModel.findOne().exec()
   try {
     if (!option) {
-      option = new OptionModel().save()
+      option = await new OptionModel().save()
     }
   } catch (error) {
     logger.error('配置初始化失败')

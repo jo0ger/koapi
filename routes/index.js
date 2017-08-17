@@ -10,7 +10,6 @@ import { generate, firstUpperCase } from '../utils'
 const { UNAUTHORIZED, NOT_FOUND } = config.server.code
 
 export default router => {
-  // 全局拦截
   router.use('*', setHeader)
 
   router.use('*', auth)

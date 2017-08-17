@@ -9,7 +9,7 @@ import { handleError } from '../utils'
 const UNAUTHORIZED = config.server.code.UNAUTHORIZED
 
 // 需要排除验证的url和method
-const exclude = [
+const EXCLUDE_AUTH = [
   // 排除登录前的auth POST请求
   { url: 'auth', type: ['GET', 'POST'] },
   // 评论 前后台都需要
@@ -38,13 +38,14 @@ export default async (ctx, next) => {
   // 如果请求时query或者body上加上_DEV_，并且是开发环境，则全部权限都通过
   // 生产环境下则无此限制，主要是为了开发方便
   if (_DEV_ && process.env.NODE_ENV === 'development') {
-    return next && next() || true
+    ctx._verify = true
+    return next && next()
   }
 
   // 权限校验，排除所有非管理员的非GET请求，comment和like接口的POST请求除外，（前台需要评论）
   if (request.method !== 'GET') {
     // 是否排除
-    const hasExclude = exclude.find(({ url, type }) => {
+    const hasExclude = EXCLUDE_AUTH.find(({ url, type }) => {
       return request.url.includes(url) && type.includes(request.method)
     })
     if (!hasExclude) {
@@ -55,7 +56,7 @@ export default async (ctx, next) => {
           if (decodedToken.exp > Math.floor(Date.now() / 1000)) {
             // _verify 已验证权限
             ctx._verify = true
-            return next && next() || true
+            return next && next()
           }
         } catch (err) {
           logger.error(err)
