@@ -57,9 +57,9 @@ function onError(error) {
     throw error;
   }
 
-  var bind = typeof addr === 'string'
-    ? '管道 ' + addr
-    : '端口 ' + addr.port;
+  var bind = typeof port === 'string'
+    ? '管道 ' + port
+    : '端口 ' + port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
