@@ -57,18 +57,18 @@ function onError(error) {
     throw error;
   }
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+  var bind = typeof addr === 'string'
+    ? '管道 ' + addr
+    : '端口 ' + addr.port;
 
   // handle specific listen errors with friendly messages
   switch (error.code) {
     case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
+      console.error(bind + ' 需要足够的运行权限');
       process.exit(1);
       break;
     case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
+      console.error(bind + ' 已经在使用中');
       process.exit(1);
       break;
     default:

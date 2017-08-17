@@ -5,9 +5,9 @@
 import qn from 'qn'
 import { handleRequest, handleSuccess, handleError, Validator } from '../../utils'
 
-// 每个bucket生成一个client
-const clientPool = {}
 const qiniuCtrl = {}
+// 每个bucket生成一个client
+let clientPool = {}
 
 const validateConfig = {
   bucket: {
@@ -49,10 +49,14 @@ function getClient (bucket = '', config = {}) {
   }
   let client = clientPool[bucket]
   if (!client) {
-    client = qn.create({
-      ...config,
-      bucket
-    })
+    try {
+      client = qn.create({
+        ...config,
+        bucket
+      })
+    } catch (err) {
+      logger.error(err)
+    }
   }
   return client
 }
@@ -62,13 +66,18 @@ function getClient (bucket = '', config = {}) {
  * @param  {String} bucket=''
  * @param  {Object} config={}
  */
-export const updateClient = (bucket = '', config = {}) => {
-  const result = { success: true, message: '' }
+export const updateQiniuClient = (config = {}) => {
+  const avaliableBuckets = config.avaliableBuckets
+  const result = { success: true }
   try {
-    clientPool[bucket] = qn.create({
-      ...config,
-      bucket
+    clientPool = {}
+    avaliableBuckets.forEach(bucket => {
+      clientPool[bucket] = qn.create({
+        ...config,
+        bucket
+      })
     })
+    logger.info('七牛云API客户端更新成功')
   } catch (err) {
     logger.error(err)
     result.success = false

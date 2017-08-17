@@ -4,13 +4,11 @@
  */
 
 import { handleRequest, handleSuccess, handleError } from '../../utils'
-import {
-  ArticleModel, TagModel, CategoryModel
-} from '../../model'
+import {ArticleModel, TagModel, CategoryModel } from '../../model'
 const statisticsCtrl = {}
 
 statisticsCtrl.GET = async (ctx, next) => {
-  let query = {}
+  const query = {}
   // 如果未通过权限校验，将文章状态重置为1
   if (!ctx._verify) {
     query.state = 1

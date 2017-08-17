@@ -23,5 +23,4 @@ export default router => {
       message: '少侠，此API无效'
     })
   })
-
 }

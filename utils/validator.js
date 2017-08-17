@@ -6,8 +6,12 @@
  * 
  * const validator = new Validator(config)
  * 
+ * 
  * const result = validator.validate(data, keys, customConfig)
  * 
+ * result => { success: Boolean, message: String }
+ * 
+ * TODO:
  * validator.addRule(config)
  * 
  * validator.removeRule(key) // key | key.key.key
