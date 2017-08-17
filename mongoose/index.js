@@ -27,7 +27,7 @@ export default {
   // plugin () {
   //   // 分页
   //   mongoosePaginate.paginate.options = {
-  //     limit: config.module.blog.postLimit
+  //     limit: config.blog.postLimit
   //   }
   //   return this
   // },
@@ -81,7 +81,7 @@ async function adminHook () {
 // 初始化分类
 async function blogHook () {
   const { CategoryModel } = require('../model')
-  const defaultCategory = config.module.blog.defaultCategory
+  const defaultCategory = config.blog.defaultCategory
   for (let i = 0; i < defaultCategory.length; i++) {
     const { name, description } = defaultCategory[i]
     await CategoryModel.findOne({ name }).then(category => {

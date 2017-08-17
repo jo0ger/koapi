@@ -22,7 +22,7 @@ commentCtrl.list.GET = async (ctx, next) => {
   const options = {
     sort: { createAt: 1 },
     page: Number(page || 1),
-    limit: Number(pageSize || config.module.blog.commentlimit),
+    limit: Number(pageSize || config.blog.commentlimit),
     lean: true,
     select: '-type -pageId',
     populate: [

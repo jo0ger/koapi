@@ -9,8 +9,6 @@ import { blogControllers } from '../controller'
 const prefix = 'blog'
 
 export default router => {
-  // Like 点赞
-  router.all(`${prefix}-like`, `/${prefix}/like`, blogControllers.like)
 
   // Article文章
   router.all(`${prefix}-article`, `/${prefix}/article`, blogControllers.article.list)
@@ -30,4 +28,7 @@ export default router => {
   // Comment评论
   router.all(`${prefix}-comment`, `/${prefix}/comment`, blogControllers.comment.list)
   router.all(`${prefix}-comment-id`, `/${prefix}/comment/:id`, blogControllers.comment.item)
+
+  // Like 点赞
+  router.all(`${prefix}-like`, `/${prefix}/like`, blogControllers.like)
 }

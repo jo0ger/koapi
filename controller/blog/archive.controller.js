@@ -14,7 +14,7 @@ archivesCtrl.GET = async (ctx, next) => {
     $match = { state: 1 }
   }
   let $page = Number(page || 1)
-  let $limit = Number(pageSize || config.module.blog.postLimit)
+  let $limit = Number(pageSize || config.blog.postLimit)
   let $skip = ($page - 1) * $limit
 
   let total = await ArticleModel.count($match).exec()

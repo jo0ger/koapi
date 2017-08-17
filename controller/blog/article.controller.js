@@ -91,7 +91,7 @@ articleCtrl.list.GET = async (ctx, next) => {
   const options = {
     sort: { createAt: -1 },
     page: Number(page || 1),
-    limit: Number(pageSize || config.module.blog.postLimit),
+    limit: Number(pageSize || config.blog.postLimit),
     populate: [
       { path: 'category', select: 'name description extends' },
       { path: 'tag', select: 'name description extends' }
