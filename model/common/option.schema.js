@@ -40,10 +40,11 @@ const optionSchema = new mongoose.Schema({
     qiniu: {
       accessKey: { type: String, default: 'yvmsQiG7qdCesWCii3nMEMHK-8Ifi7EyRlcY1FmK' },
       secretKey: { type: String, default: 'G8pkqYNw9OFxcGUvwL_Gia7b_bhV_5ejMxsNZENl' },
-      defaultBucket: { type: String, default: '' },
-      avaliableBuckets: [{ type: String, default: '' }],
-      origin: { type: String, default: 'http://oqtnezwt7.bkt.clouddn.com' },
-      uploadUrl: { type: String, default: 'http://up-z1.qiniu.com/' }
+      avaliableBuckets: [{
+        name: { type: String, required: true, default: '' },
+        origin: { type: String, required: true, default: '' },
+        uploadUrl: { type: String, default: 'http://up-z1.qiniu.com/' }
+      }]
     },
     github: {
       authorizeURL: { type: String, default: 'http://github.com/login/oauth/authorize' },

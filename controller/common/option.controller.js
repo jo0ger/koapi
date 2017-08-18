@@ -71,7 +71,6 @@ optionCtrl.PATCH = async (ctx, next) => {
   if (!isObjectId(_id)) {
     return handleError({ ctx, message: '缺少配置信息id' })
   }
-  console.log(option)
   const data = await OptionModel.findByIdAndUpdate(_id, { $set: { ...rest } }, { new: true }).exec() 
     .catch(err => {
       handleError({ ctx, err, message: '修改配置信息失败' })

@@ -18,9 +18,9 @@ likeCtrl.POST = async (ctx, next) => {
     return handleError({ ctx, message: '少侠，请输入评论类型' })
   }
 
-  let isArticle = type == 0
+  const isArticle = type == 0
 
-  let data = (
+  const data = (
     isArticle ? ArticleModel : CommentModel
   )
   .findByIdAndUpdate(id, { $inc: { [`${isArticle ? 'meta.ups' : 'ups'}`] : 1 } })
@@ -31,6 +31,8 @@ likeCtrl.POST = async (ctx, next) => {
 
   if (data) {
     handleSuccess({ ctx, message: '点赞成功' })
+  } else {
+    handleError({ ctx, message: '点赞失败' })
   }
 }
 
