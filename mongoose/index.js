@@ -57,25 +57,23 @@ async function optionHook () {
 // 初始化管理员
 async function adminHook () {
   const { AuthModel } = require('../model')
-  await AuthModel.findOne({}).then(admin => {
-    if (!admin) {
-      try {
-        const adminInfo = require('../config/admin')
-        AuthModel.create(
-          Object.assign({}, adminInfo, {
-            password: md5(`${config.server.auth.secretKey}${adminInfo.password}`)
-          })
-        ).then(a => {
-          logger.info(`admin初始化成功`)
-          logger.info(`管理员：${a.name}`)
+  const admin = await AuthModel.findOne().catch(err => logger.error(err.message))
+
+  if (!admin) {
+    try {
+      const adminInfo = require('../config/admin')
+      await AuthModel.create(
+        Object.assign({}, adminInfo, {
+          password: md5(`${config.server.auth.secretKey}${adminInfo.password}`)
         })
-      } catch (error) {
-        logger.error('admin初始化失败')
-      }
-    } else {
-      logger.info(`管理员：${admin.name}`)
+      ).then(a => {
+        logger.info(`admin初始化成功`)
+        logger.info(`管理员：${a.name}`)
+      })
+    } catch (error) {
+      logger.error('admin初始化失败')
     }
-  })
+  }
 }
 
 // 初始化分类

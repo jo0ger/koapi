@@ -98,7 +98,7 @@ export const updateQiniuClient = (config = {}) => {
     config.avaliableBuckets.forEach(bucket => {
       clientPool[bucket] = qn.create(getClientConfig(bucket, config))
     })
-    logger.info('七牛云API客户端更新成功')
+    logger.info('七牛云 api client pool 更新成功')
   } catch (err) {
     logger.error(err)
     result.success = false

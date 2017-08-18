@@ -3,9 +3,8 @@
  * @author Jooger
  */
 
-// import geoip from 'geoip-lite'
-import { handleRequest, handleSuccess, handleError, isObjectId, isEmail } from '../../utils'
-import authIsVerified from '../../middleware/auth'
+import geoip from 'geoip-lite'
+import { handleRequest, handleSuccess, handleError, isObjectId, isEmail, getAkismetClient } from '../../utils'
 import { CommentModel, ArticleModel } from'../../model'
 const commentCtrl = { list: {}, item: {} }
 
@@ -13,10 +12,9 @@ const commentCtrl = { list: {}, item: {} }
 // 当state = 1时，获取
 commentCtrl.list.GET = async (ctx, next) => {
   // sort 排序 0 时间倒序 1 时间正序 2 点赞数倒序
-  // type 评论获取方式 0 平铺 1 盖楼
-  let { page, pageSize, state, keyword, pageId, sort = 0, start_date, end_date, format = 0 } = ctx.query
+  // format 评论获取方式 0 平铺 1 盖楼
+  const { page, pageSize, state, keyword, pageId, sort = 0, startDate, endDate, format = 0 } = ctx.query
 
-  const isVerified = await authIsVerified(ctx)
 
   // 过滤条件
   const options = {
@@ -37,11 +35,11 @@ commentCtrl.list.GET = async (ctx, next) => {
   }
 
   // 评论查询条件
-  let query = {}
+  const query = {}
 
   // 如果是盖楼模式，先查询父级评论
   if (format == 1) {
-    query.parent_id = { $exists: false }
+    query.parent = { $exists: false }
   }
 
   if (pageId) {
@@ -64,16 +62,16 @@ commentCtrl.list.GET = async (ctx, next) => {
   }
 
   // 起始日期
-  if (start_date) {
-    const $gte = new Date(start_date)
+  if (startDate) {
+    const $gte = new Date(startDate)
     if ($gte.toString() !== 'Invalid Date') {
       query.createAt = { $gte }
     }
   }
 
   // 结束日期
-  if (end_date) {
-    const $lte = new Date(end_date)
+  if (endDate) {
+    const $lte = new Date(endDate)
     if ($lte.toString() !== 'Invalid Date') {
       query.createAt = Object.assign({}, query.createAt, { $lte })
     }
@@ -81,30 +79,30 @@ commentCtrl.list.GET = async (ctx, next) => {
   
 
   // 如果未通过权限校验，将评论状态重置为1，并且不返回content
-  if (!isVerified) {
+  if (!ctx._verify) {
     query.state = 1
     options.select += '-content'
   }
 
-  let parents = await CommentModel.paginate(query, options).catch(err => {
+  const parents = await CommentModel.paginate(query, options).catch(err => {
     handleError({ ctx, err, message: '评论列表获取失败' })
   })
 
-  let parentComments = parents.docs
-  let total = parentComments.length
+  const parentComments = parents.docs
+  const total = parentComments.length
 
-  if (!isVerified) {
-    let { state, pageId, parent_id } = query
-    let noPaginationQuery = { state }
+  if (!ctx._verify) {
+    const { state, pageId, parent } = query
+    const noPaginationQuery = { state }
     if (pageId) {
       noPaginationQuery.pageId = pageId
     }
     if (format === 1) {
-      noPaginationQuery.parent_id = parent_id
+      noPaginationQuery.parent = parent
     }
-    let totalComments = await CommentModel.find(noPaginationQuery).sort(options.sort)
+    const totalComments = await CommentModel.find(noPaginationQuery).sort(options.sort)
     for (let i = 0; i < parentComments.length; i++) {
-      let parent = parentComments[i]
+      const parent = parentComments[i]
       const floor = totalComments.findIndex(item => item._id.toString() === parent._id.toString())
       parent.floor = floor + 1
       if (parent.forward) {
@@ -112,7 +110,6 @@ commentCtrl.list.GET = async (ctx, next) => {
         parent.forward.floor = forwardFloor + 1
       }
     }
-
   }
 
   // format===1时，盖楼模式
@@ -121,9 +118,7 @@ commentCtrl.list.GET = async (ctx, next) => {
     let childComments = []
     for (let i = 0; i < parentComments.length; i++) {
       let parent = parentComments[i]
-      childComments = await CommentModel.find({
-        parent_id: parent._id
-      })
+      childComments = await CommentModel.find({ parent: parent._id })
       .sort('-createAt')
       .exec()
       .catch(err => {
@@ -131,7 +126,7 @@ commentCtrl.list.GET = async (ctx, next) => {
       })
       childComments = childComments.map(child => {
         child = child.toObject()
-        if (child.state !== 1 && !isVerified) {
+        if (child.state !== 1 && !ctx._verify) {
           delete child.content
           delete child.renderedContent
         }
@@ -159,44 +154,78 @@ commentCtrl.list.GET = async (ctx, next) => {
 
 // 发布评论
 commentCtrl.list.POST = async (ctx, next) => {
-  let req = ctx.request
-  let comment = req.body
-  let { content, author = {}, type, pageId, parent, forward } = comment
-  if (typeof author === 'string') {
-    author = JSON.parse(author)
-    comment.author = author
+  const comment = ctx.request.body
+  const req = ctx.req
+  const { content, author = {}, type, pageId, parent, forward } = comment
+  if (isType(author, 'String')) {
+    try {
+      author = JSON.parse(author)
+    } catch (err) {
+      logger.error(err)
+      author = {}
+    }
   }
-  let { name, email, site } = author
+  comment.author = author
+  const { name, email, site } = author
 
   // 校验
   if (![0, 1, '0', '1'].includes(type) || !pageId) {
-    return handleError({ ctx, message: '少侠，您在哪个页面评论的？' })
+    return handleError({ ctx, message: '少侠，你在哪个页面评论的？' })
   }
   if (!content) {
-    return handleError({ ctx, message: '少侠，留下您的回复' })
+    return handleError({ ctx, message: '少侠，留下你的回复' })
   }
   if (!name || !email) {
     return handleError({ ctx, message: '少侠，报上姓名和邮箱' })
   } else if (!isEmail(email)) {
-    return handleError({ ctx, message: '少侠，您的邮箱格式错了' })
+    return handleError({ ctx, message: '少侠，你的邮箱格式错了' })
   }
 
   // 获取ip
-  const ip = (ctx.req.headers['x-forwarded-for'] || 
-              ctx.req.headers['x-real-ip'] || 
-              ctx.req.connection.remoteAddress || 
-              ctx.req.socket.remoteAddress ||
-              ctx.req.connection.socket.remoteAddress ||
-              ctx.req.ip ||
-              ctx.req.ips[0]).replace('::ffff:', '')
-  // const location = geoip.lookup(ip)
-  const location = 'Beijing'
+  const ip = (req.headers['x-forwarded-for'] || 
+              req.headers['x-real-ip'] || 
+              req.connection.remoteAddress || 
+              req.socket.remoteAddress ||
+              req.connection.socket.remoteAddress ||
+              req.ip ||
+              req.ips[0]).replace('::ffff:', '')
+  const location = geoip.lookup(ip)
   comment.meta = comment.meta || {}
   if (location) {
     comment.meta.location = location
   }
   comment.meta.ip = ip
   comment.meta.agent = req.headers['user-agent'] || comment.agent
+  
+  const akismetClient = getAkismetClient('blog.jooger.me')
+  akismetClient && akismetClient.checkSpam({
+    user_ip : ip,              // Required! 
+    user_agent : comment.meta.agent,    // Required! 
+    referrer : req.headers.referer,          // Required! 
+    permalink : req.url,
+    comment_type : type == 0 ? '文章评论' : '站内留言',
+    comment_author : author.name,
+    comment_author_email : author.email,
+    comment_author_url : author.site,
+    comment_content : content,
+    is_test : process.env.NODE_ENV === 'development'
+  }).then(isSpam => {
+    const { ips, emails, keywords } = config.blog.blacklist
+    const inBlackList = ips.includes(ip) || emails.includes(author.email) || eval(`/${keywords.join('|')}/gi`).test(cotent)
+    if (isSpam) {
+      // 垃圾评论
+      comment.type = -2
+      if (!inBlackList) {
+        // TODO: 检查
+      }
+    } else {
+      // 正常评论
+      if (inBlackList) {
+
+      }
+    }
+  })
+
   comment.renderedContent = marked(content)
   if (parent && !forward) {
     comment.forward = parent
@@ -204,7 +233,7 @@ commentCtrl.list.POST = async (ctx, next) => {
     comment.parent = forward
   }
 
-  let data = await new CommentModel(comment)
+  const data = await new CommentModel(comment)
     .save()
     .catch(err => {
       handleError({ ctx, err, message: '评论发布失败'})
@@ -214,6 +243,7 @@ commentCtrl.list.POST = async (ctx, next) => {
     if (data.type === 0 && data.pageId) {
       // 如果是文章评论，则更新文章评论数量
       await updateArticleCommentCount([comment.pageId])
+      // TODO: 发送邮件给评论发布人
     }
 
     data = await CommentModel.findById(data._id)
@@ -265,33 +295,32 @@ commentCtrl.list.DELETE = async (ctx, next) => {
 
 // 获取单条评论详情，主要是查看该条评论的对话详情列表
 commentCtrl.item.GET = async (ctx, next) => {
-  const isVerified = await authIsVerified(ctx)
   let { id } = ctx.params
   if (!isObjectId(id)) {
     return handleError({ ctx, message: '缺少评论id' })
   }
   let query = { _id: id }
-  if (!isVerified) {
+  if (!ctx._verify) {
     query.state = 1
   }
   // 为该comment生成forward链
   // 如果某一级forward的state!==1，把content和renderedContent去掉
-  const generateForwardComment = async (forward_id = '', isVerified = false) => {
+  const generateForwardComment = async (forward_id = '') => {
     if (!forward_id) {
       return null
     }
     let Query = CommentModel.findById(forward_id)
-    if (!isVerified) {
+    if (!ctx._verify) {
       Query = Query.select('-content -pageId -id -type -sticky -updateAt')
     }
     let forward = await Query.exec()
     forward = forward && forward.toObject() || null
     if (forward) {
       if (forward.forward) {
-        forward.forward = await generateForwardComment(forward.forward, isVerified)
+        forward.forward = await generateForwardComment(forward.forward)
       }
       // 如果在前台获取，且评论未审核通过，获取详情的时候不返回内容
-      if (forward.state !== 1 && !isVerified) {
+      if (forward.state !== 1 && !ctx._verify) {
         delete forward.content
         delete forward.renderedContent
         delete forward.state
@@ -303,18 +332,18 @@ commentCtrl.item.GET = async (ctx, next) => {
   let Query = CommentModel.findOne(query).populate('forward')
 
   // 前台获取详情不需要content
-  if (!isVerified) {
+  if (!ctx._verify) {
     Query = Query.select('forward renderedContent')
   }
 
-  let data = await Query
+  const data = await Query
     .exec()
     .catch(err => {
       handleError({ ctx, err, message: '评论详情获取失败' })
     })
   data = data && data.toObject() || null
   if (data) {
-    data.forward = await generateForwardComment(data.forward._id, isVerified)
+    data.forward = await generateForwardComment(data.forward._id)
   }
   handleSuccess({ ctx, data, message: '评论详情获取成功' })
 }

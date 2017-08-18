@@ -57,7 +57,7 @@ authCtrl.login.POST = async (ctx, next) => {
       id: auth._id, 
       name: auth.name
     }, true)
-    ctx.cookies.set(cookieName, token, {signed: true})
+    ctx.cookies.set(cookieName, token, { signed: true })
     handleSuccess({ ctx, data: { token }, message: '登录成功' })
   } else {
     handleError({ ctx, message: '少侠，我不认识你！' })

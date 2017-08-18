@@ -39,6 +39,8 @@ koapi
 * 七牛云代理优化
 * VPS Server 监控本地可视化
 * 博客sitemap
-* 评论/回复会放松邮件给评论/回复作者 [nodemailer](https://github.com/nodemailer/nodemailer)
+* 评论/回复会放松邮件给评论/回复作者 [nodemailer]
+(https://github.com/nodemailer/nodemailer)
+* 评论显示“同城”
 * 评论反垃圾 [akismet](https://github.com/chrisfosterelli/akismet-api)
 * 评论加入位置定位 [geoip](https://github.com/bluesmoon/node-geoip)

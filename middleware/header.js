@@ -6,9 +6,10 @@
 
 export default (ctx, next) => {
   const { request, response } = ctx
-  const allowedOrigins = ['http://jooger.me', 'http://admin.jooger.me']
+  const allowedOrigins = config.server.auth.allowedOrigins
   const origin = request.get('origin') || ''
-  if (allowedOrigins.includes(origin) || origin.includes('localhost') || request.query._DEV_) {
+  const allowed = origin.includes('localhost') || request.query._DEV_ || allowedOrigins.find(item => origin.includes(item))
+  if (allowed) {
     response.set('Access-Control-Allow-Origin', origin)
   }
   response.set("Access-Control-Allow-Headers", "Authorization, Origin, No-Cache, X-Requested-With, If-Modified-Since, Pragma, Last-Modified, Cache-Control, Expires, Content-Type, X-E4M-With")

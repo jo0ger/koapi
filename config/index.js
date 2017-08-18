@@ -17,6 +17,7 @@ export default {
     rootPath: path.resolve(__dirname, '../'),
     port: 5000,
     version: packageInfo.apiVersion,
+    protocol: 'http',
     code: {
       FAILED: -1,
       SUCCESS: 0,
@@ -32,28 +33,37 @@ export default {
     auth: {
       cookirName: 'jooger_auth',
       secretKey: `${packageInfo.name} ${packageInfo.version}`,
+      // token过期时间
       expired: 60 * 60 * 24 * 365,
       defaultName: 'admin',
-      defaultPassword: 'admin'
-    }
-  },
-  thirdParty: {
-    qiniu: {
-      accessKey: 'yvmsQiG7qdCesWCii3nMEMHK-8Ifi7EyRlcY1FmK',
-      secretKey: 'G8pkqYNw9OFxcGUvwL_Gia7b_bhV_5ejMxsNZENl',
-      bucket: 'jooger',
-      origin: 'http://oqtnezwt7.bkt.clouddn.com',  // domain
-      uploadUrl: 'http://up-z1.qiniu.com/'
-    },
-    github: {
-      authorizeURL: 'http://github.com/login/oauth/authorize',
-      accessTokenURL: 'https://github.com/login/oauth/access_token',
-      userInfoUrl: 'https://api.github.com/user',
-      clientId: 'b4983366c4c7549a09f1',
-      clientSecret: '76fd8c26a21659d7eb925af0ed3498eabed49277',
-      scope: ['user']
+      defaultPassword: 'admin',
+      // 允许请求的域名
+      allowedOrigins: [
+        'jooger.me',
+        'www.jooger.me',
+        'blog.jooger.me',
+        'project.jooger.me',
+        'gallery.jooger.me'
+      ]
     }
   }
+  // thirdParty: {
+  //   qiniu: {
+  //     accessKey: 'yvmsQiG7qdCesWCii3nMEMHK-8Ifi7EyRlcY1FmK',
+  //     secretKey: 'G8pkqYNw9OFxcGUvwL_Gia7b_bhV_5ejMxsNZENl',
+  //     bucket: 'jooger',
+  //     origin: 'http://oqtnezwt7.bkt.clouddn.com',  // domain
+  //     uploadUrl: 'http://up-z1.qiniu.com/'
+  //   },
+  //   github: {
+  //     authorizeURL: 'http://github.com/login/oauth/authorize',
+  //     accessTokenURL: 'https://github.com/login/oauth/access_token',
+  //     userInfoUrl: 'https://api.github.com/user',
+  //     clientId: 'b4983366c4c7549a09f1',
+  //     clientSecret: '76fd8c26a21659d7eb925af0ed3498eabed49277',
+  //     scope: ['user']
+  //   }
+  // }
   // module: {
   //   common: {
   //     dateFormat: 'yyyy-MM-dd',

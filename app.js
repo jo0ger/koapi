@@ -9,16 +9,20 @@ import bodyparser from 'koa-bodyparser'
 import httpLogger from 'koa-logger'
 import respond from 'koa-respond'
 import minimist from 'minimist'
+import config from './config'
 
 const app = new Koa()
 
-global.config = require('./config')
+global.config = config
 global.logger = require('./utils').logger
 
 async function start () {
 
   // 数据库连接
   await require('./mongoose').init()
+
+  // Akismet服务启动
+  await require('./utils').generateAkismetClient()
 
   // middlewares
   app.use(bodyparser())
