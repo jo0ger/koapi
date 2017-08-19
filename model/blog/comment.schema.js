@@ -13,7 +13,7 @@ const commentSchema = new mongoose.Schema({
   content: { type: String, required: true, validate: /\S+/ }, // 评论内容
   renderedContent: { type: String, required: true, validate: /\S+/ }, // marked渲染后的内容
   state: { type: Number, default: 1 },  // 状态 -2 垃圾评论 | -1 已删除 | 0 待审核 | 1 通过
-  akimetSpam: { type: Boolean, default: false },  // Akismet判定是否是垃圾评论
+  akimetSpam: { type: Boolean, default: false },  // Akismet判定是否是垃圾评论，方便后台check
   author: {   // 评论发布者
     name: { type: String, required: true, validate: /\S+/ },  // 姓名
     // 邮箱

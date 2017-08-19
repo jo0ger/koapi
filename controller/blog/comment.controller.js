@@ -210,17 +210,22 @@ commentCtrl.list.POST = async (ctx, next) => {
     comment_content : content,
     is_test : process.env.NODE_ENV === 'development'
   }).then(isSpam => {
-    const { ips, emails, keywords } = config.blog.blacklist
-    const inBlackList = ips.includes(ip) || emails.includes(author.email) || eval(`/${keywords.join('|')}/gi`).test(cotent)
+    const { ips, emails, forbidWords } = config.blog.blacklist
+    const inBlackList = ips.includes(ip) || emails.includes(author.email) || eval(`/${forbidWords.join('|')}/gi`).test(cotent)
     if (isSpam) {
-      // 垃圾评论
-      comment.type = -2
-      if (!inBlackList) {
-        // TODO: 检查
+      // 置为垃圾评论
+      comment.state = -2
+      comment.akimetSpam = true
+      if (inBlackList) {
+        // TODO: 提示垃圾评论，评论不会显示，并且提示黑名单
+      } else {
+        // TODO: 检查曾经发布的垃圾评论次数，如果达到config.blog.commentSpamLimit，加入NOTE:黑名单
       }
     } else {
       // 正常评论
       if (inBlackList) {
+        // TODO: 提示在黑名单，评论不会显示
+      } else {
 
       }
     }
@@ -372,7 +377,7 @@ commentCtrl.item.PUT = async (ctx, next) => {
 
 // 删除单条评论
 commentCtrl.item.DELETE = async (ctx, next) => {
-  let { id } = ctx.params
+  const { id } = ctx.params
   if (!isObjectId(id)) {
     return handleError({ ctx, message: '缺少评论id' })
   }
@@ -396,6 +401,7 @@ async function updateArticleCommentCount (article_ids = []) {
     { $group: { _id: '$pageId', total_count: { $sum: 1 } } }
   ]).exec().catch(err => {
     logger.warn(`更新文章评论数量前聚合评论数据操作失败， err: ${err}`)
+    counts = []
   })
   counts.forEach(count => {
     ArticleModel.update(

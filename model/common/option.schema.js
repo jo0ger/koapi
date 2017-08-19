@@ -32,7 +32,7 @@ const optionSchema = new mongoose.Schema({
     blacklist: {
       ips: [{ type: String, validate: /\S+/ }],
       emails: [{ type: String, validate: /\S+/ }],
-      keywords: [{ type: String, validate: /\S+/ }]
+      forbidWords: [{ type: String, validate: /\S+/ }]
     }
   },
   vps: {

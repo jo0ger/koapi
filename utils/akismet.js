@@ -1,5 +1,5 @@
 /**
- * @desc 
+ * @desc Akismet spam check helper
  * @author Jooger
  * @email zzy1198258955@163.com
  * @date 18 Aug 2017
@@ -23,10 +23,17 @@ const validateConfig = {
 }
 const validator = new Validator(validateConfig)
 
+// 客户端集合池
 let clientPool = {}
-let isValidKey = false
-let loading = null
 
+// Akismet apikey是否验证通过
+let isValidKey = false
+
+/**
+ * @desc Akismet Client Class
+ * @param {String} [required] key       Akismet apikey
+ * @param {String} [required] site      Akismet site
+ */
 class AkismetClient {
   constructor (key, site) {
     this.key = key
@@ -65,7 +72,8 @@ class AkismetClient {
       if (isValidKey) {
         this.client.checkSpam(opt, (err, spam) => {
           if (err) {
-            return resolve(err)
+            logger.error('Akismet 验证出错，将跳过spam验证，err：', err.message)
+            return reject(false)
           }
           if (spam) {
             logger.error('Akismet 验证不通过，疑似垃圾评论')
@@ -82,19 +90,50 @@ class AkismetClient {
     })
   }
 
-  // 提交被误检为正常评论的spam
-  async submitSpam (opt = {}) {}
-
   // 提交被误检为spam的正常评论
-  async submitHam (opt = {}) {}
-}
+  async submitSpam (opt = {}) {
+    logger.info('Akismet 误检spam报告提交中...')
+    await new Promise((resolve, reject) => {
+      if (isValidKey) {
+        this.client.submitSpam(opt, err => {
+          logger.error(`Akismet 误检spam报告提交${err ? '失败' : '成功'}`)
+          resolve()
+        })
+      } else {
+        logger.warn(`Akismet的apikey未认证，误检spam报告提交失败`)
+        resolve()
+      }
+    })
+  }
 
+  // 提交被误检为正常评论的spam
+  async submitHam (opt = {}) {
+    logger.info('Akismet 误检正常评论提交中...')
+    await new Promise((resolve, reject) => {
+      if (isValidKey) {
+        this.client.submitSpam(opt, err => {
+          logger.error(`Akismet 误检正常评论报告提交${err ? '失败' : '成功'}`)
+          resolve()
+        })
+      } else {
+        logger.warn(`Akismet的apikey未认证，误检正常评论报告提交失败`)
+        resolve()
+      }
+    })
+  }
+}
+/**
+ * @desc 更新option时，更新Akismet clients
+ */
 export const updateAkismetClient = async () => {
   isValidKey = false
   clientPool = {}
   await generateClientPool(true)
 }
-
+/**
+ * @desc 生成Akismet clients
+ * @param  {Boolean} update=false       是否是更新状态
+ */
 export const generateAkismetClient = async (update = false) => {
   const akismetConfig = config.thirdParty.akismet
   const { success, message } = validator.validate(akismetConfig)
@@ -118,6 +157,11 @@ export const generateAkismetClient = async (update = false) => {
   logger.info(`Akismet服务${update ? '更新' : '启动'}成功`)
 }
 
+/**
+ * @desc 根据站点地址获取对应Akismet client
+ * @param  {String} site                    站点地址
+ * @return {AkismetClient} akismetClient    Akismet client
+ */
 export default function getAkismetClient (site) {
   const matched = Object.keys(clientPool).find(key => key.includes(site))
   if (!matched) {
