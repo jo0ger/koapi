@@ -24,9 +24,9 @@ export const verifyMailClient = async () => {
     transporter.verify((err, success) => {
       if (err) {
         isVerify = false
-        logger.error('邮件客户端初始化失败，将在一小时后重试，err：', err.message)
+        logger.error('邮件客户端初始化失败，将在1分钟后重试，err：', err.message)
         reject(err)
-        setTimeout(verifyMailClient, 60 * 60 * 1000)
+        setTimeout(verifyMailClient, 60 * 1000)
       } else {
         isVerify = true
         logger.info('邮件客户端初始化成功')

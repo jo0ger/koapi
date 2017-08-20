@@ -347,12 +347,13 @@ commentCtrl.item.GET = async (ctx, next) => {
   handleSuccess({ ctx, data, message: '评论详情获取成功' })
 }
 
+// 修改评论
 commentCtrl.item.PUT = async (ctx, next) => {
-  let { id } = ctx.params
-  let comment = ctx.request.body
-  let { content } = comment
+  const { id } = ctx.params
+  const comment = ctx.request.body
+  const { content } = comment
   if (!isObjectId(id)) {
-    return handleError({ ctx, message: '缺少文章id' })
+    return handleError({ ctx, message: '缺少评论id' })
   }
   if (!content) {
     return handleError({ ctx, message: '少侠，留下您的回复' })
@@ -367,6 +368,42 @@ commentCtrl.item.PUT = async (ctx, next) => {
   if (data && data.type === 0 && data.pageId) {
     await updateArticleCommentCount([data.pageId])
   }
+}
+
+// 评论状态修改 （已读|未读）
+commentCtrl.item.PATCH = async (ctx, next) => {
+  const { id } = ctx.params
+  const { state } = ctx.request.body
+  
+  if (!isObjectId(id)) {
+    return handleError({ ctx, message: '缺少评论id' })
+  }
+
+  if (!['-2', '-1', '0', '1', -2, -1, 0, 1].includes(state)) {
+    return handleError({ ctx, message: '未知的评论状态' })
+  }
+
+  const _c = await CommentModel.findById(id).exec().catch(err => logger.error(err.message))
+
+  if (_c) {
+    if (_c.state === -2 && state != -2) {
+      // 垃圾评论转为正常评论
+      if (_c.akimetSpam) {
+        // TODO: 报告给Akismet
+      }
+    } else if (_c.state !== -2 && state == -2) {
+      // 正常评论转为垃圾评论
+      if (!_c.akimetSpam) {
+        // TODO: 报告给Akismet
+      }
+    }
+  }
+
+  const comment = await CommentModel.findByIdAndUpdate(id, { $set: { state } }, { new: true })
+    .exec()
+    .catch(err => handleError({ ctx, err, message: '评论状态更改失败' }))
+  
+  handleSuccess({ ctx, message: '评论状态更改成功' })
 }
 
 // 删除单条评论

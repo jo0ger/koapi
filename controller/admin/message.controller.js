@@ -104,10 +104,6 @@ messageCtrl.item.GET = async (ctx, next) => {
 messageCtrl.item.PATCH = async (ctx, next) => {
   const { id } = ctx.params
   const { state } = ctx.request.body
-  
-  if (!ctx._verify) {
-    return handleError({ ctx, message: '消息需要登录后才能查看' })
-  }
 
   if (!isObjectId(id)) {
     return handleError({ ctx, message: '缺少消息id' })
@@ -122,16 +118,12 @@ messageCtrl.item.PATCH = async (ctx, next) => {
     .exec()
     .catch(err => handleError({ ctx, err, message: '消息状态更改失败' }))
   
-  handleSuccess({ ctx, data: message, message: '消息状态更改成功' })
+  handleSuccess({ ctx, message: state == 0 ? '消息标记位未读' : '消息标记位已读' })
 }
 
 // 消息删除
 messageCtrl.item.DELETE = async (ctx, next) => {
   const { id } = ctx.params
-  
-  if (!ctx._verify) {
-    return handleError({ ctx, message: '消息需要登录后才能查看' })
-  }
 
   if (!isObjectId(id)) {
     return handleError({ ctx, message: '缺少消息id' })
