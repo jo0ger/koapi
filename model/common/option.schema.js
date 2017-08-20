@@ -7,7 +7,7 @@ const mongoosePaginate = require('mongoose-paginate')
 
 const optionSchema = new mongoose.Schema({
   common: {
-    dateFormat: { type: String, default: '' },
+    dateFormat: { type: String, default: '' }
   },
   // 博客
   blog: {

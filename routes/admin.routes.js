@@ -10,6 +10,10 @@ const prefix = '/admin'
 
 export default router => {
   // 七牛云获取uptoken
-  router.all(`${prefix}/qiniu`, adminControllers.qiniu)
+  router.all(`${prefix}-qiniu`, `${prefix}/qiniu`, adminControllers.qiniu)
+
+  // 消息获取
+  router.all(`${prefix}-message`, `${prefix}/message`, adminControllers.message.list)
+  router.all(`${prefix}-message-id`, `${prefix}/message/:id`, adminControllers.message.item)
 
 }

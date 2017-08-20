@@ -4,9 +4,11 @@
  */
 
 import geoip from 'geoip-lite'
-import { handleRequest, handleSuccess, handleError, isObjectId, isEmail, getAkismetClient } from '../../utils'
-import { CommentModel, ArticleModel } from'../../model'
+import { handleRequest, handleSuccess, handleError, isObjectId, isEmail, getAkismetClient, isType, marked } from '../../utils'
+import { CommentModel, ArticleModel, MessageModel, OptionModel } from'../../model'
+
 const commentCtrl = { list: {}, item: {} }
+const LINK = `${config.server.protocol}://blog.jooger.me`
 
 // 获取评论列表
 // 当state = 1时，获取
@@ -191,73 +193,67 @@ commentCtrl.list.POST = async (ctx, next) => {
               req.ips[0]).replace('::ffff:', '')
   const location = geoip.lookup(ip)
   comment.meta = comment.meta || {}
-  if (location) {
-    comment.meta.location = location
-  }
+  comment.meta.location = location || ''
   comment.meta.ip = ip
   comment.meta.agent = req.headers['user-agent'] || comment.agent
   
-  const akismetClient = getAkismetClient('blog.jooger.me')
-  akismetClient && akismetClient.checkSpam({
-    user_ip : ip,              // Required! 
-    user_agent : comment.meta.agent,    // Required! 
-    referrer : req.headers.referer,          // Required! 
-    permalink : req.url,
-    comment_type : type == 0 ? '文章评论' : '站内留言',
-    comment_author : author.name,
-    comment_author_email : author.email,
-    comment_author_url : author.site,
-    comment_content : content,
-    is_test : process.env.NODE_ENV === 'development'
-  }).then(isSpam => {
-    const { ips, emails, forbidWords } = config.blog.blacklist
-    const inBlackList = ips.includes(ip) || emails.includes(author.email) || eval(`/${forbidWords.join('|')}/gi`).test(cotent)
-    if (isSpam) {
-      // 置为垃圾评论
-      comment.state = -2
-      comment.akimetSpam = true
-      if (inBlackList) {
-        // TODO: 提示垃圾评论，评论不会显示，并且提示黑名单
-      } else {
-        // TODO: 检查曾经发布的垃圾评论次数，如果达到config.blog.commentSpamLimit，加入NOTE:黑名单
-      }
-    } else {
-      // 正常评论
-      if (inBlackList) {
-        // TODO: 提示在黑名单，评论不会显示
-      } else {
+  // 先判断是不是垃圾邮件
+  const akismetClient = getAkismetClient(LINK)
+  const permalink = `${LINK}/${type == 0 ? `article/${pageId}` : 'guestbook'}`
+  let isSpam = false
+  if (akismetClient) {
+    isSpam = await akismetClient.checkSpam({
+      user_ip : ip,              // Required! 
+      user_agent : comment.meta.agent,    // Required! 
+      referrer : req.headers.referer,          // Required! 
+      permalink,
+      comment_type : type == 0 ? '文章评论' : '站内留言',
+      comment_author : author.name,
+      comment_author_email : author.email,
+      comment_author_url : author.site,
+      comment_content : content,
+      is_test : process.env.NODE_ENV === 'development'
+    })
+  }
+  
+  const { ips, emails, forbidWords } = config.blog.blacklist
+  const inBlackList = !!(ips.includes(ip) || emails.includes(author.email) || (forbidWords.length && eval(`/${forbidWords.join('|')}/gi`).test(cotent)))
+  const { black, spam, message } = await checkComment(comment, isSpam, inBlackList)
 
-      }
-    }
-  })
+  if (black || spam) {
+    return handleSuccess({ ctx, message })
+  }
 
   comment.renderedContent = marked(content)
+  
   if (parent && !forward) {
     comment.forward = parent
   } else if (forward && !parent) {
     comment.parent = forward
   }
 
-  const data = await new CommentModel(comment)
+  let data = await new CommentModel(comment)
     .save()
     .catch(err => {
       handleError({ ctx, err, message: '评论发布失败'})
     })
 
   if (data) {
-    if (data.type === 0 && data.pageId) {
-      // 如果是文章评论，则更新文章评论数量
-      await updateArticleCommentCount([comment.pageId])
-      // TODO: 发送邮件给评论发布人
-    }
-
+    
     data = await CommentModel.findById(data._id)
-      .select('-type -pageId')
-      .populate({ path: 'forward', select: 'author.name' })
-      .exec().catch(err => {
-        handleError({ ctx, err, message: '评论发布失败'})
-      })
+    .select('-content -type -pageId')
+    .populate({ path: 'forward', select: 'author.name' })
+    .populate({ path: 'parent', select: 'author.name' })
+    .exec().catch(err => {
+      handleError({ ctx, err, message: '评论发布失败'})
+    })
     handleSuccess({ ctx, data, message: '评论发布成功' })
+    // 生成站内消息
+    generateMessage(data)
+    // 发送邮件给评论发布人
+    sendEmailToUser(data, permalink)
+    // 如果是文章评论，则更新文章评论数量
+    updateArticleCommentCount([comment.pageId])
   }
 }
 
@@ -391,26 +387,106 @@ commentCtrl.item.DELETE = async (ctx, next) => {
 }
 
 // 更新文章的meta.comments评论数量
-async function updateArticleCommentCount (article_ids = []) {
+function updateArticleCommentCount (article_ids = []) {
   if (!article_ids.length) {
     return
   }
   article_ids = [...new Set(article_ids)].filter(id => isObjectId(id))
-  let counts = await CommentModel.aggregate([
+  CommentModel.aggregate([
     { $match: { state: 1, pageId: { $in: article_ids } } },
     { $group: { _id: '$pageId', total_count: { $sum: 1 } } }
-  ]).exec().catch(err => {
-    logger.warn(`更新文章评论数量前聚合评论数据操作失败， err: ${err}`)
-    counts = []
-  })
-  counts.forEach(count => {
-    ArticleModel.update(
-      { _id: count._id },
-      { $set: { 'meta.comments': count.total_count } }
-    ).exec().catch(err => {
-      logger.warn(`文章评论数量更新失败， err: ${err}`)
+  ])
+  .exec()
+  .then(counts => {
+    counts.forEach(count => {
+      ArticleModel.update(
+        { _id: count._id },
+        { $set: { 'meta.comments': count.total_count } }
+      ).exec().catch(err => {
+        logger.warn(`文章评论数量更新失败， err: ${err}`)
+      })
     })
+  }).catch(err => {
+    logger.warn(`更新文章评论数量前聚合评论数据操作失败， err: ${err}`)
   })
+}
+
+// TODO: 发送邮件
+function sendEmailToUser (comment, permalink) {
+
+}
+
+// 检测评论
+async function checkComment (comment, isSpam, inBlackList) {
+  const { commentSpamLimit, blacklist: { ips, emails, forbidWords } } = config.blog
+  const result = { black: inBlackList, spam: isSpam, message: '' }
+
+  if (inBlackList) {
+    // 在黑名单
+    result.message = '你在黑名单中，该评论不会显示'
+  } else if (isSpam) {
+    // 不在黑名单 && 垃圾邮件
+    comment.state = -2
+    comment.akimetSpam = true
+    // 该用户历史垃圾评论次数
+    let spamCount = await CommentModel.count({
+      akimetSpam: true,
+      'author.name': comment.author.name,
+      'author.email': comment.author.email
+    })
+    .exec()
+    .catch(() => (spamCount = 0))
+    if (spamCount >= commentSpamLimit) {
+      // 达到规定的垃圾评论最大次数
+      result.black = true
+      result.message = '你在黑名单中，该评论不会显示'
+      // 拉入黑名单
+      await OptionModel.findOneAndUpdate({}, {
+        blacklist: {
+          ips: ips.concat(ip),
+          emails: emails.concat(comment.author.email),
+          forbidWords
+        }
+      })
+    } else {
+      result.message = '检测到垃圾评论，该评论不会显示'
+    }
+  } else {
+    // 不在黑名单 && 不是垃圾邮件
+    result.message = '正常评论'
+  }
+
+  return result
+}
+
+// 生成站内消息
+function generateMessage (comment) {
+  let atMe = false
+  let replyMe = false
+  let title = '发布评论'
+
+  if (comment.forward && comment.forward.author.name === config.info.author) {
+    // 回复我的评论
+    replyMe = true
+  }
+  
+  // TODO: 解析comment的content，看是否@了我
+  //
+  //
+
+  if (replyMe) {
+    title = '回复了我'
+  }
+  if (atMe) {
+    title += '，并且@了我'
+  }
+  new MessageModel({
+    title,
+    type: parseInt('' + ~~replyMe + ~~atMe, 2),
+    comment: comment._id
+  })
+  .save()
+  .catch(err => logger.error(err.message))
 }
 
 export default {

@@ -6,12 +6,12 @@
 const { METHOD_NOT_ALLOWED, FAILED } = config.server.code
 
 export async function handleRequest ({ ctx, type, next }) {
-  const method = ctx.request.method
+  const method = ctx.method
   const support = !!type[method]
   if (support) {
     await type[method](ctx, next)
   } else {
-    handleError({ ctx, message: `${ctx.request.url}不支持${method}请求类型` })
+    handleError({ ctx, message: `${ctx.path}不支持${method}请求类型` })
   }
 }
 

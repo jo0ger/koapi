@@ -66,9 +66,9 @@ class AkismetClient {
   }
 
   // 检测是否是spam
-  async checkSpam (opt = {}) {
+  checkSpam (opt = {}) {
     logger.info('Akismet 验证评论中...')
-    await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       if (isValidKey) {
         this.client.checkSpam(opt, (err, spam) => {
           if (err) {
@@ -77,10 +77,10 @@ class AkismetClient {
           }
           if (spam) {
             logger.error('Akismet 验证不通过，疑似垃圾评论')
-            reject(new Error('疑似垃圾评论'))
+            resolve(true)
           } else {
             logger.info('Akismet 验证通过')
-            resolve(spam)
+            resolve(false)
           }
         })
       } else {
@@ -91,9 +91,9 @@ class AkismetClient {
   }
 
   // 提交被误检为spam的正常评论
-  async submitSpam (opt = {}) {
+  submitSpam (opt = {}) {
     logger.info('Akismet 误检spam报告提交中...')
-    await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       if (isValidKey) {
         this.client.submitSpam(opt, err => {
           logger.error(`Akismet 误检spam报告提交${err ? '失败' : '成功'}`)
@@ -107,9 +107,9 @@ class AkismetClient {
   }
 
   // 提交被误检为正常评论的spam
-  async submitHam (opt = {}) {
+  submitHam (opt = {}) {
     logger.info('Akismet 误检正常评论提交中...')
-    await new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       if (isValidKey) {
         this.client.submitSpam(opt, err => {
           logger.error(`Akismet 误检正常评论报告提交${err ? '失败' : '成功'}`)
@@ -163,10 +163,10 @@ export const generateAkismetClient = async (update = false) => {
  * @return {AkismetClient} akismetClient    Akismet client
  */
 export default function getAkismetClient (site) {
-  const matched = Object.keys(clientPool).find(key => key.includes(site))
+  const matched = Object.keys(clientPool).find(key => key.includes(site) || site.includes(key))
   if (!matched) {
     logger.info(`未找到 ${site} 的Akismet配置，将跳过spam验证`)
     return null
   }
-  return clientPool[site]
+  return clientPool[matched]
 }

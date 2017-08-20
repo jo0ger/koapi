@@ -7,11 +7,13 @@ import mongoose from 'mongoose'
 import { generate, firstUpperCase } from '../utils'
 import commonSchemas from './common'
 import blogSchemas from './blog'
+import adminSchemas from './admin'
 
 const models = {}
 const schemas = {
   ...commonSchemas,
-  ...blogSchemas
+  ...blogSchemas,
+  ...adminSchemas
 }
 
 Object.keys(schemas).forEach(key => {

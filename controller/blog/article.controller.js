@@ -448,15 +448,11 @@ articleCtrl.item.PATCH = async (ctx, next) => {
     return handleError({ ctx, message })
   }
 
-  const params = {}
-
   if (![0, 1, '0', '1'].includes(state)) {
-    return handleError({ ctx, message: '文章状态不对' })
+    return handleError({ ctx, message: '未知的文章状态' })
   }
 
-  params.state = state
-
-  await ArticleModel.findByIdAndUpdate(id, params, { new: true })
+  await ArticleModel.findByIdAndUpdate(id, { $set: {state} }, { new: true })
     .populate({ path: 'category', select: 'name description extends' })
     .populate({ path: 'tag', select: 'name description extends' })
     .exec()
