@@ -21,8 +21,13 @@ async function start () {
   // 数据库连接
   await require('./mongoose').init()
 
+  const { generateAkismetClient, verifyMailClient } = require('./utils')
+
+  // 初始化邮件客户端
+  await verifyMailClient()
+
   // Akismet服务启动
-  await require('./utils').generateAkismetClient()
+  await generateAkismetClient()
 
   // middlewares
   app.use(bodyparser())

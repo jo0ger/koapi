@@ -11,6 +11,7 @@ export default {
     name: packageInfo.name,
     version: packageInfo.version,
     author: packageInfo.author,
+    email: packageInfo.email,
     site: packageInfo.site
   },
   server: {

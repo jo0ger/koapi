@@ -5,7 +5,6 @@
 const highlight = require('highlight.js')
 const marked = require('marked')
 
-
 const languages = ['cpp', 'xml', 'bash', 'coffeescript', 'css', 'markdown', 'http', 'java', 'javascript', 'json', 'less', 'makefile', 'nginx', 'php', 'python', 'scss', 'sql', 'stylus']
 highlight.registerLanguage('cpp', require('highlight.js/lib/languages/cpp'))
 highlight.registerLanguage('xml', require('highlight.js/lib/languages/xml'))

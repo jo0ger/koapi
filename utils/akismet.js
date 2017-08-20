@@ -55,7 +55,7 @@ class AkismetClient {
         valid = v
         if (v) {
           isValidKey = true
-          logger.info(`Akismet的apikey: ${this.key} 有效`)
+          // logger.info(`Akismet的apikey: ${this.key} 有效`)
         } else {
           logger.warn(`Akismet的apikey: ${this.key} 无效`)
           this.client = null

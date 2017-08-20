@@ -4,7 +4,7 @@
  */
 
 import geoip from 'geoip-lite'
-import { handleRequest, handleSuccess, handleError, isObjectId, isEmail, getAkismetClient, isType, marked } from '../../utils'
+import { handleRequest, handleSuccess, handleError, isObjectId, isEmail, getAkismetClient, isType, marked, sendMail } from '../../utils'
 import { CommentModel, ArticleModel, MessageModel, OptionModel } from'../../model'
 
 const commentCtrl = { list: {}, item: {} }
@@ -239,21 +239,19 @@ commentCtrl.list.POST = async (ctx, next) => {
     })
 
   if (data) {
-    
     data = await CommentModel.findById(data._id)
-    .select('-content -type -pageId')
-    .populate({ path: 'forward', select: 'author.name' })
-    .populate({ path: 'parent', select: 'author.name' })
+    .populate({ path: 'forward', select: 'author.name author.email' })
+    .populate({ path: 'parent', select: 'author.name author.email' })
     .exec().catch(err => {
       handleError({ ctx, err, message: '评论发布失败'})
     })
     handleSuccess({ ctx, data, message: '评论发布成功' })
     // 生成站内消息
     generateMessage(data)
-    // 发送邮件给评论发布人
-    sendEmailToUser(data, permalink)
     // 如果是文章评论，则更新文章评论数量
     updateArticleCommentCount([comment.pageId])
+    // 发送邮件给评论发布人及博主
+    await sendEmailToAdminAndUser(data, permalink)
   }
 }
 
@@ -412,8 +410,30 @@ function updateArticleCommentCount (article_ids = []) {
 }
 
 // TODO: 发送邮件
-function sendEmailToUser (comment, permalink) {
+async function sendEmailToAdminAndUser (comment, permalink) {
+  const { type, pageId } = comment
+  let adminTitle = '博客有新的留言'
+  if (type == 0) {
+    // 文章评论
+    const article = await ArticleModel.findById(pageId).exec()
+    if (article && article._id) {
+      adminTitle = `博客文章 [${article.title}] 有了新的评论`
+    }
+  }
+  sendMail({
+    subject: adminTitle,
+    text: `来自 ${comment.author.name} 的${type == 0 ? '评论' : '留言'}：${comment.content}`,
+    html: `<p>来自 ${comment.author.name} 的${type == 0 ? '评论' : '留言'} <a href="${permalink}" target="_blank">[ 点击查看 ]</a>：${comment.renderedContent}</p>`
+  }, true)
 
+  if (comment.forward) {
+    sendMail({
+      to: comment.forward.author.email,
+      subject: '你在Jooger的博客的评论有了新的回复',
+      text: `来自 ${comment.author.name} 的回复：${comment.content}`,
+      html: `<p>来自 ${comment.author.name} 的回复 <a href="${permalink}" target="_blank">[ 点击查看 ]</a>：${comment.renderedContent}</p>`
+    })
+  }
 }
 
 // 检测评论
@@ -463,7 +483,7 @@ async function checkComment (comment, isSpam, inBlackList) {
 function generateMessage (comment) {
   let atMe = false
   let replyMe = false
-  let title = '发布评论'
+  let title = comment.type == 0 ? '发布评论' : '发布留言'
 
   if (comment.forward && comment.forward.author.name === config.info.author) {
     // 回复我的评论
