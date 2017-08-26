@@ -8,23 +8,46 @@ import { handleError } from '../utils'
 
 const UNAUTHORIZED = config.server.code.UNAUTHORIZED
 
-// 需要排除验证的url和method
+// 非GET请求中，需要排除验证的url和method
 const EXCLUDE_AUTH = [
   // 排除登录前的auth POST请求
-  { url: 'auth', type: ['GET', 'POST'] },
+  { url: 'auth', type: ['POST'] },
   // 评论 前后台都需要
   { url: 'comment', type: ['POST'] },
   // 点在 前后台都需要
   { url: 'like', type: ['POST'] }
 ]
 
+// GET请求中，需要验证的url和method
+const INCLUDE_AUTH = [
+  { url: 'comment/author', type: ['GET'] },
+  { url: 'admin/qiniu', type: ['GET'] }
+]
+
 // 获取token
-function _authToken (req) {
+function getToken (req) {
   if (req && req.headers && req.headers.authorization) {
     const auths = req.headers.authorization.split(' ')
     // oauth2的token类型是Bearer或者Mac
     if (auths.length === 2 && auths[0] === 'Bearer') {
       return auths[1]
+    }
+  }
+  return false
+}
+
+async function verifyToken (req) {
+  const token = getToken(req)
+  if (token) {
+    try {
+      const decodedToken = await jwt.verify(token, config.server.auth.secretKey)
+      if (decodedToken.exp > Math.floor(Date.now() / 1000)) {
+        // 已验证权限
+        return true
+      }
+    } catch (err) {
+      logger.error(err)
+      return false
     }
   }
   return false
@@ -42,25 +65,26 @@ export default async (ctx, next) => {
     return next && next()
   }
 
-  // 权限校验，排除所有非管理员的非GET请求，comment和like接口的POST请求除外，（前台需要评论）
+  // 权限校验，排除所有非管理员的非GET请求，comment和like接口和autho接口的请求除外，（前台需要评论）
   if (request.method !== 'GET') {
     // 是否排除
-    const hasExclude = EXCLUDE_AUTH.find(({ url, type }) => {
-      return request.url.includes(url) && type.includes(request.method)
-    })
+    const hasExclude = EXCLUDE_AUTH.find(({ url, type }) => request.url.includes(url) && type.includes(request.method))
     if (!hasExclude) {
-      const token = _authToken(request)
-      if (token) {
-        try {
-          const decodedToken = await jwt.verify(token, config.server.auth.secretKey)
-          if (decodedToken.exp > Math.floor(Date.now() / 1000)) {
-            // _verify 已验证权限
-            ctx._verify = true
-            return next && next()
-          }
-        } catch (err) {
-          logger.error(err)
-        }
+      if (await verifyToken(request)) {
+        // _verify 已验证权限
+        ctx._verify = true
+        return next()
+      }
+      return fail()
+    }
+  } else {
+    // 是否是需要验证的get
+    const hasInclude = INCLUDE_AUTH.find(({ url, type }) => request.url.includes(url) && type.includes(request.method))
+    if (hasInclude) {
+      if (await verifyToken(request)) {
+        // _verify 已验证权限
+        ctx._verify = true
+        return next()
       }
       return fail()
     }

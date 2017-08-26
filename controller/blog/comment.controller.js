@@ -423,8 +423,10 @@ commentCtrl.item.DELETE = async (ctx, next) => {
 
 // 获取评论的作者合集
 commentCtrl.author.GET = async (ctx, next) => {
-  // 根据name和email进行聚合
-  const data = await CommentModel.aggregate([
+
+  const { pageId } = ctx.query
+
+  const opt = [
     {
       $project: {
         _id: 0,
@@ -437,22 +439,24 @@ commentCtrl.author.GET = async (ctx, next) => {
           name: '$author.name',
           email: '$author.email'
         },
-        name: {
-          $first: '$author.name'
-        },
-        email: {
-          $first: '$author.email'
-        },
-        site: {
-          $first: '$author.site'
-        },
-        avatar: {
-          $first: '$author.avatar'
-        },
+        name: { $first: '$author.name' },
+        email: { $first: '$author.email' },
+        site: { $first: '$author.site' },
+        avatar: { $first: '$author.avatar' },
         count: { $sum: 1 }
       }
     }
-  ])
+  ]
+
+  if (pageId) {
+    opt.unshift({
+      $match: { pageId }
+    })
+  }
+
+  // 根据name和email进行聚合
+  const data = await CommentModel.aggregate(opt)
+  .exec()
   .catch(err => handleError({ ctx, err, message: '评论作者获取失败' }))
 
   handleSuccess({ ctx, data: data || [], message: '评论作者获取成功' })
