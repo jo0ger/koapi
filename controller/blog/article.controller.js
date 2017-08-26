@@ -422,6 +422,7 @@ articleCtrl.item.PUT = async (ctx, next) => {
       if (!isObjectId(item)) {
         tag.splice(index, 1, null)
       }
+      return item
     }).filter(item => !!item)
   }
 

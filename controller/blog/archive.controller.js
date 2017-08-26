@@ -4,13 +4,12 @@
 
 import { handleRequest, handleSuccess, handleError } from '../../utils'
 import { ArticleModel } from '../../model'
-import authIsVerified from '../../middleware/auth'
 const archivesCtrl = {}
 
 archivesCtrl.GET = async (ctx, next) => {
   let { page, pageSize } = ctx.query
   let $match = {}
-  if (!await authIsVerified(ctx)) {
+  if (!ctx._verify) {
     $match = { state: 1 }
   }
   let $page = Number(page || 1)

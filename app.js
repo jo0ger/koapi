@@ -24,10 +24,10 @@ async function start () {
   const { generateAkismetClient, verifyMailClient } = require('./utils')
 
   // 初始化邮件客户端
-  await verifyMailClient()
+  verifyMailClient()
 
   // Akismet服务启动
-  await generateAkismetClient()
+  generateAkismetClient()
 
   // middlewares
   app.use(bodyparser())

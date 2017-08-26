@@ -7,7 +7,7 @@ import geoip from 'geoip-lite'
 import { handleRequest, handleSuccess, handleError, isObjectId, isEmail, getAkismetClient, isType, marked, sendMail } from '../../utils'
 import { CommentModel, ArticleModel, MessageModel, OptionModel } from'../../model'
 
-const commentCtrl = { list: {}, item: {} }
+const commentCtrl = { list: {}, item: {}, author: {} }
 const LINK = `${config.server.protocol}://blog.jooger.me`
 
 // 获取评论列表
@@ -15,7 +15,7 @@ const LINK = `${config.server.protocol}://blog.jooger.me`
 commentCtrl.list.GET = async (ctx, next) => {
   // sort 排序 0 时间倒序 1 时间正序 2 点赞数倒序
   // format 评论获取方式 0 平铺 1 盖楼
-  const { page, pageSize, state, keyword, pageId, sort = 0, startDate, endDate, format = 0 } = ctx.query
+  const { page, pageSize, state, keyword, author, pageId, sort = 0, startDate, endDate, format = 0 } = ctx.query
 
 
   // 过滤条件
@@ -421,6 +421,43 @@ commentCtrl.item.DELETE = async (ctx, next) => {
     })
 }
 
+// 获取评论的作者合集
+commentCtrl.author.GET = async (ctx, next) => {
+  // 根据name和email进行聚合
+  const data = await CommentModel.aggregate([
+    {
+      $project: {
+        _id: 0,
+        author: 1
+      }
+    },
+    {
+      $group: {
+        _id: {
+          name: '$author.name',
+          email: '$author.email'
+        },
+        name: {
+          $first: '$author.name'
+        },
+        email: {
+          $first: '$author.email'
+        },
+        site: {
+          $first: '$author.site'
+        },
+        avatar: {
+          $first: '$author.avatar'
+        },
+        count: { $sum: 1 }
+      }
+    }
+  ])
+  .catch(err => handleError({ ctx, err, message: '评论作者获取失败' }))
+
+  handleSuccess({ ctx, data: data || [], message: '评论作者获取成功' })
+}
+
 // 更新文章的meta.comments评论数量
 function updateArticleCommentCount (article_ids = []) {
   if (!article_ids.length) {
@@ -548,5 +585,6 @@ function generateMessage (comment) {
 
 export default {
   list: async (ctx, next) => await handleRequest({ ctx, next, type: commentCtrl.list }),
-  item: async (ctx, next) => await handleRequest({ ctx, next, type: commentCtrl.item })
+  item: async (ctx, next) => await handleRequest({ ctx, next, type: commentCtrl.item }),
+  author: async (ctx, next) => await handleRequest({ ctx, next, type: commentCtrl.author }),
 }

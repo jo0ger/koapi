@@ -8,10 +8,10 @@ import mongoose from 'mongoose'
 
 export const createObjectId = () => mongoose.Types.ObjectId()
 
+export const isObjectId = (str = '') => mongoose.Types.ObjectId.isValid(str)
+
 // 首字母大写
-export const firstUpperCase = (str) => {
-  return str.toLowerCase().replace(/( |^)[a-z]/g, (L) => L.toUpperCase())
-}
+export const firstUpperCase = (str = '') => str.toLowerCase().replace(/( |^)[a-z]/g, (L) => L.toUpperCase())
 
 /* 类型检测
  * @param {*} obj 检测对象
@@ -24,11 +24,7 @@ export const isType = (obj, type = 'Object') => {
   return type.some(t => Object.prototype.toString.call(obj) === `[object ${firstUpperCase(t)}]`)
 }
 
-export const isObjectId = (str = '') => mongoose.Types.ObjectId.isValid(str)
-
-export function isEmail (str = '') {
-  return /^(\w-*\.*)+@(\w-?)+(\.\w{2,})+$/.test(str)
-}
+export const isEmail = (str = '') => /^(\w-*\.*)+@(\w-?)+(\.\w{2,})+$/.test(str)
 
 /**
  * 将时间输出为统一的格式

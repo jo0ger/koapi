@@ -6,7 +6,7 @@
   "author": "Jooger <zzy1198258955@163.com> (http:jooger.me)",
   "main": "app.js",
   "scripts": {
-    "koa": "cross-env NODE_ENV=development ./node_modules/.bin/runkoa bin/www",
+    "debug": "node --inspect=5000 bin/run",
     "dev": "cross-env NODE_ENV=development ./node_modules/.bin/nodemon bin/run",
     "prod": "cross-env NODE_ENV=production pm2 start bin/run --name='koapi'",
     "prod-log": "cross-env NODE_ENV=production log=true pm2 start bin/run --name='koapi'"
