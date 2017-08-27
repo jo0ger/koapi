@@ -6,6 +6,7 @@
 import geoip from 'geoip-lite'
 import { handleRequest, handleSuccess, handleError, isObjectId, isEmail, getAkismetClient, isType, marked, sendMail } from '../../utils'
 import { CommentModel, ArticleModel, MessageModel, OptionModel } from'../../model'
+import { gravatar } from '../../utils'
 
 const commentCtrl = { list: {}, item: {}, author: {} }
 const LINK = `${config.server.protocol}://blog.jooger.me`
@@ -15,7 +16,7 @@ const LINK = `${config.server.protocol}://blog.jooger.me`
 commentCtrl.list.GET = async (ctx, next) => {
   // sort 排序 0 时间倒序 1 时间正序 2 点赞数倒序
   // format 评论获取方式 0 平铺 1 盖楼
-  const { page, pageSize, state, keyword, author, pageId, sort = 0, startDate, endDate, format = 0 } = ctx.query
+  const { page, pageSize, state, keyword, authorName, authorEmail, pageId, sort = 0, startDate, endDate, format = 0 } = ctx.query
 
 
   // 过滤条件
@@ -25,9 +26,7 @@ commentCtrl.list.GET = async (ctx, next) => {
     limit: Number(pageSize || config.blog.commentlimit),
     lean: true,
     select: '-type -pageId',
-    populate: [
-      { path: 'forward', select: 'author.name' }
-    ]
+    populate: { path: 'forward', select: 'author.name' }
   }
 
   if ([0, 1, '0', '1'].includes(sort)) {
@@ -78,7 +77,16 @@ commentCtrl.list.GET = async (ctx, next) => {
       query.createAt = Object.assign({}, query.createAt, { $lte })
     }
   }
-  
+
+  // 评论作者姓名和email
+  if (authorName || authorEmail) {
+    if (authorName) {
+      query['author.name'] = authorName
+    }
+    if (authorEmail) {
+      query['author.email'] = authorEmail
+    }
+  }
 
   // 如果未通过权限校验，将评论状态重置为1，并且不返回content
   if (!ctx._verify) {
@@ -91,7 +99,7 @@ commentCtrl.list.GET = async (ctx, next) => {
   })
 
   const parentComments = parents.docs
-  const total = parentComments.length
+  let total = parentComments.length
 
   if (!ctx._verify) {
     const { state, pageId, parent } = query
@@ -115,11 +123,12 @@ commentCtrl.list.GET = async (ctx, next) => {
   }
 
   // format===1时，盖楼模式
-  if (format === 1) {
+  if (format == 1) {
     // 迭代子评论
     let childComments = []
     for (let i = 0; i < parentComments.length; i++) {
-      let parent = parentComments[i]
+      const parent = parentComments[i]
+      parent.author.avatar = gravatar(parent.author.email)
       childComments = await CommentModel.find({ parent: parent._id })
       .sort('-createAt')
       .exec()
@@ -132,10 +141,16 @@ commentCtrl.list.GET = async (ctx, next) => {
           delete child.content
           delete child.renderedContent
         }
+        child.author.avatar = gravatar(child.author.email)
         return child
       })
       total += childComments.length
       parent.children = childComments
+    }
+  } else {
+    for (let i = 0; i < parentComments.length; i++) {
+      const parent = parentComments[i]
+      parent.author.avatar = gravatar(parent.author.email)
     }
   }
   
@@ -145,10 +160,10 @@ commentCtrl.list.GET = async (ctx, next) => {
     data: {
       list: parentComments,
       pagination: {
-        total: parents.total,
-        current_page: parents.page,
-        total_page: parents.pages,
-        per_page: parents.limit
+        totalCount: parents.total,
+        currentPage: parents.page,
+        totalPage: parents.pages,
+        pageSize: parents.limit
       }
     }
   })
@@ -427,7 +442,7 @@ commentCtrl.author.GET = async (ctx, next) => {
   const { pageId } = ctx.query
 
   const opt = [
-    {
+    { 
       $project: {
         _id: 0,
         author: 1
@@ -444,6 +459,11 @@ commentCtrl.author.GET = async (ctx, next) => {
         site: { $first: '$author.site' },
         avatar: { $first: '$author.avatar' },
         count: { $sum: 1 }
+      }
+    },
+    {
+      $sort: {
+        count: -1
       }
     }
   ]

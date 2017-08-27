@@ -29,6 +29,7 @@
   "dependencies": {
     "akismet-api": "^3.0.0",
     "geoip-lite": "^1.2.1",
+    "gravatar": "^1.6.0",
     "highlight.js": "^9.10.0",
     "jsonwebtoken": "^7.3.0",
     "koa": "^2.0.0",

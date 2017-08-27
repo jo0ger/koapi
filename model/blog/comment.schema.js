@@ -19,8 +19,7 @@ const commentSchema = new mongoose.Schema({
     // 邮箱
     email: { type: String, required: true, validate: /\w[-\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\.)+[A-Za-z]{2,14}/ },
     // 个人站点地址
-    site: { type: String, validate: /^((https|http):\/\/)+[A-Za-z0-9]+\.[A-Za-z0-9]+[\/=\?%\-&_~`@[\]\':+!]*([^<>\"\"])*$/ },
-    avatar: { type: String, default: '' }
+    site: { type: String, validate: /^((https|http):\/\/)+[A-Za-z0-9]+\.[A-Za-z0-9]+[\/=\?%\-&_~`@[\]\':+!]*([^<>\"\"])*$/ }
   },
   ups: { type: Number, default: 0 }, // 点赞数
   sticky: { type: Boolean, default: false }, // 是否置顶

@@ -84,6 +84,8 @@ optionCtrl.PATCH = async (ctx, next) => {
   }
 }
 
-
+function updateConfig (opt) {
+  
+}
 
 export default async (ctx, next) => await handleRequest({ctx, next, type: optionCtrl })

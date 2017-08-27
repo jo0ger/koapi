@@ -125,7 +125,9 @@ articleCtrl.list.GET = async (ctx, next) => {
       'meta.pvs': -1,
       createAt: -1
     }
-    options.select = 'title createAt meta tag thumb'
+    if (!ctx._verify) {
+      options.select = 'title createAt meta tag thumb'
+    }
   } else if (sort) {
     // sort 排序
     try {
@@ -414,12 +416,14 @@ articleCtrl.item.PUT = async (ctx, next) => {
   // 分类 必须是objectId类型
   if (category && !isObjectId(category)) {
     delete article.category
+  } else if (category.length === 0) {
+    article.category = createObjectId()
   }
 
   // 标签
   if (tag) {
     article.tag = tag.slice().map((item, index) => {
-      if (!isObjectId(item)) {
+      if (!item || !isObjectId(item)) {
         tag.splice(index, 1, null)
       }
       return item

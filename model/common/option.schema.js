@@ -17,7 +17,7 @@ const optionSchema = new mongoose.Schema({
     description: { type: String, default: '' },
     author: { type: String, default: config.info.author },
     siteUrl: { type: String, default: '' },
-    siteEmail: String,
+    siteEmail: { type: String, required: true, validate: /\w[-\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\.)+[A-Za-z]{2,14}/ },
     language: { type: String, default: 'zh-Hans' },
     favicon: { type: String, default: '/favicon.ico' },
     socials: [{
@@ -25,6 +25,7 @@ const optionSchema = new mongoose.Schema({
       link: { type: String, required: true },
       icon: String
     }],
+    defaultAvatar: { type: String, default: 'http://static.jooger.me/image/avatar.png' },
     postLimit: { type: Number, default: 10 },
     commentlimit: { type: Number, default: 100 },
     // 发布垃圾评论加入黑名单的最大次数
