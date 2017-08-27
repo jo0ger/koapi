@@ -110,7 +110,7 @@ commentCtrl.list.GET = async (ctx, next) => {
   if (pageId) {
     noPaginationQuery.pageId = query.pageId
   }
-  if (format === 1) {
+  if (format == 1) {
     noPaginationQuery.parent = query.parent
   }
   const totalComments = await CommentModel.find(noPaginationQuery).sort(options.sort)
