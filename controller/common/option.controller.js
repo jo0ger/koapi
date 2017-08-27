@@ -55,9 +55,11 @@ optionCtrl.POST = async (ctx, next) => {
   }
   await new OptionModel(ctx.request.body.option).save()
     .then(data => {
-      // 更新七牛云API客户端配置
-      updateQiniuClient(data.thirdParty.qiniu)
       handleSuccess({ ctx, data, message: '新增配置信息成功' })
+      // 更新七牛云API客户端配置
+      updateQiniuClient(opt.thirdParty.qiniu)
+      // 更新全局配置
+      updateConfig(data)
     })
     .catch(err => {
       handleError({ ctx, err, message: '新增配置信息失败' })
@@ -76,16 +78,19 @@ optionCtrl.PATCH = async (ctx, next) => {
       handleError({ ctx, err, message: '修改配置信息失败' })
     })
   if (data) {
-    // 更新七牛云API客户端配置
     handleSuccess({ ctx, data, message: '修改配置信息成功' })
-    updateQiniuClient(data.thirdParty.qiniu)
+    // 更新七牛云API客户端配置
+    updateQiniuClient(opt.thirdParty.qiniu)
+    // 更新全局配置
+    updateConfig(data)
   } else {
     handleError({ ctx, err, message: '修改配置信息失败' })
   }
 }
 
-function updateConfig (opt) {
-  
+// 更新全局配置
+function updateConfig (opt = {}) {
+  Object.assign(global.config, opt.toObject ? opt.toObject() : null)
 }
 
 export default async (ctx, next) => await handleRequest({ctx, next, type: optionCtrl })

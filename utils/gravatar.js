@@ -15,7 +15,7 @@ export default (email, opt = {}) => {
 
   const isHttps = config.server.protoco === 'https'
 
-  let url = gravatar.url(email, {
+  const url = gravatar.url(email, {
     s: '100',
     r: 'x',
     d: 'retro',

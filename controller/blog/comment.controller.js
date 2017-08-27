@@ -101,6 +101,7 @@ commentCtrl.list.GET = async (ctx, next) => {
   const parentComments = parents.docs
   let total = parentComments.length
 
+  // 添加floor
   if (!ctx._verify) {
     const { state, pageId, parent } = query
     const noPaginationQuery = { state }
@@ -127,7 +128,7 @@ commentCtrl.list.GET = async (ctx, next) => {
     // 迭代子评论
     let childComments = []
     for (let i = 0; i < parentComments.length; i++) {
-      const parent = parentComments[i]
+      const  parent = parentComments[i]
       parent.author.avatar = gravatar(parent.author.email)
       childComments = await CommentModel.find({ parent: parent._id })
       .sort('-createAt')
@@ -208,19 +209,20 @@ commentCtrl.list.POST = async (ctx, next) => {
               req.ips[0]).replace('::ffff:', '')
   const location = geoip.lookup(ip)
   comment.meta = comment.meta || {}
-  comment.meta.location = location || ''
+  comment.meta.location = location || {}
   comment.meta.ip = ip
   comment.meta.agent = req.headers['user-agent'] || comment.agent
+  comment.meta.referer = req.headers.referer || ''
   
   // 先判断是不是垃圾邮件
   const akismetClient = getAkismetClient(LINK)
-  const permalink = `${LINK}/${type == 0 ? `article/${pageId}` : 'guestbook'}`
+  const permalink = getPermalink(comment)
   let isSpam = false
   if (akismetClient) {
     isSpam = await akismetClient.checkSpam({
-      user_ip : ip,              // Required! 
-      user_agent : comment.meta.agent,    // Required! 
-      referrer : req.headers.referer,          // Required! 
+      user_ip : ip,                             // Required! 
+      user_agent : comment.meta.agent,          // Required! 
+      referrer : comment.meta.referer,          // Required! 
       permalink,
       comment_type : type == 0 ? '文章评论' : '站内留言',
       comment_author : author.name,
@@ -260,6 +262,10 @@ commentCtrl.list.POST = async (ctx, next) => {
     .exec().catch(err => {
       handleError({ ctx, err, message: '评论发布失败'})
     })
+
+    data = data.toObject()
+    data.author.avatar = gravatar(data.author.email)
+
     handleSuccess({ ctx, data, message: '评论发布成功' })
     // 生成站内消息
     generateMessage(data)
@@ -379,13 +385,17 @@ commentCtrl.item.PUT = async (ctx, next) => {
     .catch(err => {
       handleError({ ctx, err, message: '评论修改失败' })
     })
+  
+  data = data.toObject()
+  data.author.avatar = gravatar(data.author.email)
+
   handleSuccess({ ctx, data, message: '评论修改成功' })
   if (data && data.type === 0 && data.pageId) {
     await updateArticleCommentCount([data.pageId])
   }
 }
 
-// 评论状态修改 （已读|未读）
+// 评论状态修改
 commentCtrl.item.PATCH = async (ctx, next) => {
   const { id } = ctx.params
   const { state } = ctx.request.body
@@ -398,23 +408,45 @@ commentCtrl.item.PATCH = async (ctx, next) => {
     return handleError({ ctx, message: '未知的评论状态' })
   }
 
-  const _c = await CommentModel.findById(id).exec().catch(err => logger.error(err.message))
+  const update = { state }
 
-  if (_c) {
-    if (_c.state === -2 && state != -2) {
-      // 垃圾评论转为正常评论
-      if (_c.akimetSpam) {
-        // TODO: 报告给Akismet
+  async function submitAkismet () {
+    const _c = await CommentModel.findById(id).exec().catch(err => logger.error(err.message))
+    
+    if (_c) {
+      const opt = {
+        user_ip : _c.meta.ip,                 // Required! 
+        user_agent : _c.meta.agent,           // Required! 
+        referrer : _c.meta.referer,           // Required! 
+        permalink: getPermalink(_c),
+        comment_type : _c.type == 0 ? '文章评论' : '站内留言',
+        comment_author : _c.author.name,
+        comment_author_email : _c.author.email,
+        comment_author_url : _c.author.site,
+        comment_content : _c.content,
+        is_test : process.env.NODE_ENV === 'development'
       }
-    } else if (_c.state !== -2 && state == -2) {
-      // 正常评论转为垃圾评论
-      if (!_c.akimetSpam) {
-        // TODO: 报告给Akismet
+      if (_c.state === -2 && state != -2) {
+        // 垃圾评论转为正常评论
+        if (_c.akimetSpam) {
+          update.akimetSpam = false
+          // 报告给Akismet
+          akismetClient.submitSpam(opt)
+        }
+      } else if (_c.state !== -2 && state == -2) {
+        // 正常评论转为垃圾评论
+        if (!_c.akimetSpam) {
+          update.akimetSpam = true
+          // 报告给Akismet
+          akismetClient.submitHam(opt)
+        }
       }
     }
   }
 
-  const comment = await CommentModel.findByIdAndUpdate(id, { $set: { state } }, { new: true })
+  await submitAkismet()
+
+  const comment = await CommentModel.findByIdAndUpdate(id, { $set: update }, { new: true })
     .exec()
     .catch(err => handleError({ ctx, err, message: '评论状态更改失败' }))
   
@@ -507,7 +539,7 @@ function updateArticleCommentCount (article_ids = []) {
   })
 }
 
-// TODO: 发送邮件
+// 发送邮件
 async function sendEmailToAdminAndUser (comment, permalink) {
   const { type, pageId } = comment
   let adminTitle = '博客有新的留言'
@@ -605,6 +637,11 @@ function generateMessage (comment) {
   })
   .save()
   .catch(err => logger.error(err.message))
+}
+
+function getPermalink (comment = {}) {
+  const { type, pageId } = comment
+  return `${LINK}/${type == 0 ? `article/${pageId}` : 'guestbook'}`
 }
 
 export default {

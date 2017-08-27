@@ -27,7 +27,8 @@ const commentSchema = new mongoose.Schema({
   meta: {
     ip: String, // 用户IP
     location: Object,  // IP所在地
-    agent: { type: String, validate: /\S+/ } // user agent
+    agent: { type: String, validate: /\S+/ }, // user agent
+    referer: { type: String, default: '' }
   } ,
   extends: [{
     key: { type: String, validate: /\S+/ },
