@@ -48,7 +48,8 @@ commentCtrl.list.GET = async (ctx, next) => {
   }
 
   // 评论状态
-  if (['-2', '-1', '0', '1', -2, -1, 0, 1].includes(state)) {
+  const hasState = ['-2', '-1', '0', '1', -2, -1, 0, 1].includes(state)
+  if (hasState) {
     query.state = state
   }
 
@@ -102,24 +103,24 @@ commentCtrl.list.GET = async (ctx, next) => {
   let total = parentComments.length
 
   // 添加floor
-  if (!ctx._verify) {
-    const { state, pageId, parent } = query
-    const noPaginationQuery = { state }
-    if (pageId) {
-      noPaginationQuery.pageId = pageId
-    }
-    if (format === 1) {
-      noPaginationQuery.parent = parent
-    }
-    const totalComments = await CommentModel.find(noPaginationQuery).sort(options.sort)
-    for (let i = 0; i < parentComments.length; i++) {
-      const parent = parentComments[i]
-      const floor = totalComments.findIndex(item => item._id.toString() === parent._id.toString())
-      parent.floor = floor + 1
-      if (parent.forward) {
-        const forwardFloor = totalComments.findIndex(item => item._id.toString() === parent.forward._id.toString())
-        parent.forward.floor = forwardFloor + 1
-      }
+  const noPaginationQuery = {}
+  if (hasState) {
+    noPaginationQuery.state = query.state
+  }
+  if (pageId) {
+    noPaginationQuery.pageId = query.pageId
+  }
+  if (format === 1) {
+    noPaginationQuery.parent = query.parent
+  }
+  const totalComments = await CommentModel.find(noPaginationQuery).sort(options.sort)
+  for (let i = 0; i < parentComments.length; i++) {
+    const parent = parentComments[i]
+    const floor = totalComments.findIndex(item => item._id.toString() === parent._id.toString())
+    parent.floor = floor + 1
+    if (parent.forward) {
+      const forwardFloor = totalComments.findIndex(item => item._id.toString() === parent.forward._id.toString())
+      parent.forward.floor = forwardFloor + 1
     }
   }
 
@@ -336,6 +337,7 @@ commentCtrl.item.GET = async (ctx, next) => {
     let forward = await Query.exec()
     forward = forward && forward.toObject() || null
     if (forward) {
+      forward.author.avatar = gravatar(forward.author.email)
       if (forward.forward) {
         forward.forward = await generateForwardComment(forward.forward)
       }
@@ -363,6 +365,7 @@ commentCtrl.item.GET = async (ctx, next) => {
     })
   data = data && data.toObject() || null
   if (data) {
+    data.author.avatar = gravatar(data.author.email)
     data.forward = await generateForwardComment(data.forward._id)
   }
   handleSuccess({ ctx, data, message: '评论详情获取成功' })
@@ -489,7 +492,6 @@ commentCtrl.author.GET = async (ctx, next) => {
         name: { $first: '$author.name' },
         email: { $first: '$author.email' },
         site: { $first: '$author.site' },
-        avatar: { $first: '$author.avatar' },
         count: { $sum: 1 }
       }
     },
@@ -507,9 +509,14 @@ commentCtrl.author.GET = async (ctx, next) => {
   }
 
   // 根据name和email进行聚合
-  const data = await CommentModel.aggregate(opt)
+  let data = await CommentModel.aggregate(opt)
   .exec()
   .catch(err => handleError({ ctx, err, message: '评论作者获取失败' }))
+
+  data = data.map(item => {
+    item.avatar = gravatar(item.email)
+    return item
+  })
 
   handleSuccess({ ctx, data: data || [], message: '评论作者获取成功' })
 }
