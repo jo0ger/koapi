@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "apiVersion": "v1.0",
   "description": "blog api , developing",
-  "author": "Jooger <zzy1198258955@163.com> (http:jooger.me)",
+  "author": "Jooger",
+  "email": "zzy1198258955@163.com",
   "main": "app.js",
   "scripts": {
     "debug": "node --inspect=5000 bin/run",

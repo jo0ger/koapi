@@ -4,6 +4,7 @@
  */
 
 import md5 from 'md5'
+import jwt from 'jsonwebtoken'
 import { handleRequest, handleSuccess, handleError } from '../../utils'
 import { AuthModel } from '../../model'
 
@@ -41,24 +42,34 @@ authCtrl.info.GET = async (ctx, next) => {
 
 // 登录，生成token
 authCtrl.login.POST = async (ctx, next) => {
-  const { password } = ctx.request.body
+  const { name, password } = ctx.request.body
+
+  if (!name) {
+    return handleError({ ctx, message: '用户名不能为空' })
+  }
   if (!password) {
     return handleError({ ctx, message: '密码不能为空' })
   }
+
   const { secretKey, expired, cookieName } = config.server.auth
-  const auth = await AuthModel.findOne({})
-    .select('password -_id')
+  let auth = await AuthModel.findOne({})
     .exec()
     .catch(err => {
       handleError({ ctx, err, message: '登录失败' })
     })
-  if (auth && auth.password === md5Encode(password)) {
+  const encodePassword = md5Encode(password)
+  if (auth && auth.name === name && auth.password === encodePassword) {
+    auth = auth.toObject()
     const token = signUserToken({
       id: auth._id, 
       name: auth.name
     }, true)
     ctx.cookies.set(cookieName, token, { signed: true })
-    handleSuccess({ ctx, data: { token }, message: '登录成功' })
+    handleSuccess({ ctx, data: { info: { ...auth }, token }, message: '登录成功' })
+  } else if (auth.name !== name) {
+    handleError({ ctx, message: '少侠，名字错啦！' })
+  } else if (auth.password !== encodePassword) {
+    handleError({ ctx, message: '少侠，密码错啦！' })
   } else {
     handleError({ ctx, message: '少侠，我不认识你！' })
   }

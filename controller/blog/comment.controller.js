@@ -13,6 +13,10 @@ const LINK = `${config.server.protocol}://blog.jooger.me`
 
 // 获取评论列表
 // 当state = 1时，获取
+// TODO: 
+// 根据author查询的时候，还需要优化
+// 盖楼模式下，显示父评论和其子评论
+// 平铺模式下，子评论显示回复的楼层
 commentCtrl.list.GET = async (ctx, next) => {
   // sort 排序 0 时间倒序 1 时间正序 2 点赞数倒序
   // format 评论获取方式 0 平铺 1 盖楼
@@ -25,7 +29,7 @@ commentCtrl.list.GET = async (ctx, next) => {
     page: Number(page || 1),
     limit: Number(pageSize || config.blog.commentlimit),
     lean: true,
-    select: '-type -pageId',
+    select: '-type',
     populate: { path: 'forward', select: 'author.name' }
   }
 
@@ -79,8 +83,10 @@ commentCtrl.list.GET = async (ctx, next) => {
     }
   }
 
+  const searchByAuthor = authorName || authorEmail
+
   // 评论作者姓名和email
-  if (authorName || authorEmail) {
+  if (searchByAuthor) {
     if (authorName) {
       query['author.name'] = authorName
     }
@@ -133,6 +139,8 @@ commentCtrl.list.GET = async (ctx, next) => {
       parent.author.avatar = gravatar(parent.author.email)
       childComments = await CommentModel.find({ parent: parent._id })
       .sort('-createAt')
+      .populate({ path: 'parent', select: 'author.name' })
+      .populate({ path: 'forward', select: 'author.name' })
       .exec()
       .catch(err => {
         handleError({ ctx, err, message: '评论列表获取失败' })
@@ -239,7 +247,7 @@ commentCtrl.list.POST = async (ctx, next) => {
   const { black, spam, message } = await checkComment(comment, isSpam, inBlackList)
 
   if (black || spam) {
-    return handleSuccess({ ctx, message })
+    return handleError({ ctx, message })
   }
 
   comment.renderedContent = marked(content)
@@ -258,11 +266,11 @@ commentCtrl.list.POST = async (ctx, next) => {
 
   if (data) {
     data = await CommentModel.findById(data._id)
-    .populate({ path: 'forward', select: 'author.name author.email' })
-    .populate({ path: 'parent', select: 'author.name author.email' })
-    .exec().catch(err => {
-      handleError({ ctx, err, message: '评论发布失败'})
-    })
+      .populate({ path: 'forward', select: 'author.name author.email' })
+      .populate({ path: 'parent', select: 'author.name author.email' })
+      .exec().catch(err => {
+        handleError({ ctx, err, message: '评论发布失败'})
+      })
 
     data = data.toObject()
     data.author.avatar = gravatar(data.author.email)
@@ -417,6 +425,7 @@ commentCtrl.item.PATCH = async (ctx, next) => {
     const _c = await CommentModel.findById(id).exec().catch(err => logger.error(err.message))
     
     if (_c) {
+      const akismetClient = getAkismetClient(LINK)
       const opt = {
         user_ip : _c.meta.ip,                 // Required! 
         user_agent : _c.meta.agent,           // Required! 
@@ -453,7 +462,7 @@ commentCtrl.item.PATCH = async (ctx, next) => {
     .exec()
     .catch(err => handleError({ ctx, err, message: '评论状态更改失败' }))
   
-  handleSuccess({ ctx, message: '评论状态更改成功' })
+  handleSuccess({ ctx, data: comment, message: '评论状态更改成功' })
 }
 
 // 删除单条评论

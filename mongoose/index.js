@@ -5,6 +5,7 @@
 import mongoose from 'mongoose'
 // import mongoosePaginate from 'mongoose-paginate'
 import md5 from 'md5'
+import config from '../config'
 
 mongoose.Promise = global.Promise
 
@@ -58,7 +59,6 @@ async function optionHook () {
 async function adminHook () {
   const { AuthModel } = require('../model')
   const admin = await AuthModel.findOne().catch(err => logger.error(err.message))
-
   if (!admin) {
     try {
       const adminInfo = require('../config/admin')
@@ -71,7 +71,7 @@ async function adminHook () {
         logger.info(`管理员：${a.name}`)
       })
     } catch (error) {
-      logger.error('admin初始化失败')
+      logger.error('admin初始化失败，err: ' + error.message)
     }
   }
 }

@@ -96,7 +96,7 @@ class AkismetClient {
     return new Promise((resolve, reject) => {
       if (isValidKey) {
         this.client.submitSpam(opt, err => {
-          logger.error(`Akismet 误检spam报告提交${err ? '失败' : '成功'}`)
+          logger[err ? 'error' : 'log'](`Akismet 误检spam报告提交${err ? '失败' : '成功'}`)
           resolve()
         })
       } else {
@@ -112,7 +112,7 @@ class AkismetClient {
     return new Promise((resolve, reject) => {
       if (isValidKey) {
         this.client.submitSpam(opt, err => {
-          logger.error(`Akismet 误检正常评论报告提交${err ? '失败' : '成功'}`)
+          logger[err ? 'error' : 'log'](`Akismet 误检正常评论报告提交${err ? '失败' : '成功'}`)
           resolve()
         })
       } else {
