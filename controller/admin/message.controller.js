@@ -6,7 +6,7 @@
  */
 
 import { handleRequest, handleSuccess, handleError, isObjectId } from '../../utils'
-import { MessageModel } from '../../model'
+import { MessageModel, ArticleModel } from '../../model'
 
 const messageCtrl = {
   list: {},
@@ -27,7 +27,10 @@ messageCtrl.list.GET = async (ctx, next) => {
     page: Number(page || 1),
     limit: Number(pageSize || 20),
     populate: [
-      { path: 'comment', select: 'name description extends' }
+      {
+        path: 'comment',
+        select: 'author pageId'
+      }
     ]
   }
 
@@ -60,19 +63,31 @@ messageCtrl.list.GET = async (ctx, next) => {
     }
   }
 
-  const messages = await MessageModel.paginate(query, options)
+  const result = await MessageModel.paginate(query, options)
     .catch(err => handleError({ ctx, err, message: '消息列表获取失败' }))
+
+  const tmp = result.docs
+  const messages = []
+
+  for (let i = 0; i < tmp.length; i++) {
+    const message = tmp[i].toObject()
+    if (message.comment && isObjectId(message.comment.pageId)) {
+      const article = await ArticleModel.findById(message.comment.pageId).select('title').exec()
+      message.post = article.toObject()
+      messages.push(message)
+    }
+  }
 
   handleSuccess({
     ctx,
     message: '消息列表获取成功',
     data: {
-      list: messages.docs,
+      list: messages,
       pagination: {
-        totalCount: messages.total,
-        currentPage: messages.page > messages.pages ? messages.pages : messages.page,
-        totalPage: messages.pages,
-        pageSize: messages.limit
+        totalCount: result.total,
+        currentPage: result.page > result.pages ? result.pages : result.page,
+        totalPage: result.pages,
+        pageSize: result.limit
       }
     } 
   })

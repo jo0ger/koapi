@@ -77,15 +77,15 @@ async function adminHook () {
 }
 
 // 初始化分类
-async function blogHook () {
-  const { CategoryModel } = require('../model')
-  const defaultCategory = config.blog.defaultCategory
-  for (let i = 0; i < defaultCategory.length; i++) {
-    const { name, description } = defaultCategory[i]
-    await CategoryModel.findOne({ name }).then(category => {
-      if (!category) {
-        new CategoryModel({ name, description }).save()
-      }
-    })
-  }
-}
+// async function blogHook () {
+//   const { CategoryModel } = require('../model')
+//   const defaultCategory = config.blog.defaultCategory
+//   for (let i = 0; i < defaultCategory.length; i++) {
+//     const { name, description } = defaultCategory[i]
+//     await CategoryModel.findOne({ name }).then(category => {
+//       if (!category) {
+//         new CategoryModel({ name, description }).save()
+//       }
+//     })
+//   }
+// }

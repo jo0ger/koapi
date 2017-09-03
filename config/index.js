@@ -32,7 +32,7 @@ export default {
       uri: 'mongodb://127.0.0.1/koapi'
     },
     auth: {
-      cookirName: 'jooger_auth',
+      cookieName: 'JOOGER_AUTH',
       secretKey: `${packageInfo.name} ${packageInfo.version}`,
       // token过期时间
       expired: 60 * 60 * 24 * 365,

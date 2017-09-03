@@ -2,7 +2,7 @@
  * @desc 分类处理
  * @author Jooger
  */
-
+import mongoose from 'mongoose'
 import { handleRequest, handleSuccess, handleError, isObjectId } from '../../utils'
 import { CategoryModel, ArticleModel } from '../../model'
 import { Validator } from '../../utils'
@@ -55,7 +55,7 @@ categoryCtrl.list.GET = async (ctx, next) => {
     if (!ctx._verify) {
       $match.state = 1
     }
-    
+
     await ArticleModel.aggregate([
       { $match },
       { $unwind: '$category' },
@@ -115,6 +115,12 @@ categoryCtrl.list.DELETE = async (ctx, next) => {
     handleError({ ctx, message: '未选中分类' })
     return
   }
+
+  const articles = await ArticleModel.find({ category: { $in: categories } }).exec()
+  if (articles && articles.length) {
+    return handleError({ ctx, message: '删除的分类下还有文章，不能删除' })
+  }
+
   let data = await CategoryModel.remove({ _id: { $in: categories }})
     .catch(err => {
       handleError({ ctx, message: `${categories.length>1?'批量':''}删除分类失败`, err })
@@ -172,20 +178,13 @@ categoryCtrl.item.PUT = async (ctx, next) => {
     return handleError({ ctx, message })
   }
 
-  const { length } = await CategoryModel.find({ name }).exec().catch(err => {
-    handleError({ ctx, err, message: '修改分类失败' })
-  })
-  if (!length) {
-    await CategoryModel.findByIdAndUpdate(id, category, { new: true }).exec()
-      .then(data => {
-        handleSuccess({ ctx, message: '修改分类成功', data })
-      })
-      .catch(err => {
-        handleError({ ctx, message: '修改分类失败' })
-      })
-  } else {
-    handleError({ ctx, message: '该分类名称已存在' })
-  }
+  await CategoryModel.findByIdAndUpdate(id, category, { new: true }).exec()
+    .then(data => {
+      handleSuccess({ ctx, message: '修改分类成功', data })
+    })
+    .catch(err => {
+      handleError({ ctx, message: '修改分类失败' })
+    })
 }
 
 // 删除单个分类
@@ -195,6 +194,12 @@ categoryCtrl.item.DELETE = async (ctx, next) => {
     handleError({ ctx, message: '缺少分类ID' })
     return
   }
+
+  const article = await ArticleModel.findOne({ category: id }).exec()
+  if (article) {
+    return handleError({ ctx, message: '该分类下还有文章，不能删除' })
+  }
+
   await CategoryModel.findByIdAndRemove(id).exec()
     .then(data => {
       handleSuccess({ ctx, message: '删除分类成功' })

@@ -39,45 +39,26 @@ tagCtrl.list.GET = async (ctx, next) => {
     ]
   }
 
-  const querySuccess = (ctx, tags) => {
-    handleSuccess({
-      ctx,
-      message: '标签列表获取成功',
-      data: {
-        list: tags,
-        total: tags.length
-      }
-    })
-  }
-
-  // 查询article中的tag的聚合数据
-  const getTagsCount = async (ctx, tags) => {
-    let $match = {}
-    if (!await authIsVerified(ctx)) {
-      $match = { state: 1 }
-    }
-    await ArticleModel.aggregate([
-      { $match },
-      { $unwind: '$tag' },
-      { $group: {
-        _id: '$tag',
-        total_count: { $sum: 1 }
-      } }
-    ]).exec().then(counts => {
-      tags = tags.map(tag => {
-        const matched = counts.find(count => count._id.toString() === tag._id.toString())
-        tag = tag.toObject()
-        tag.count = matched && matched.total_count || 0
-        return tag
-      })
-      querySuccess(ctx, tags)
-    })
-  }
-
-  const tags = await TagModel.find(query).exec().catch(err => {
+  let tags = await TagModel.find(query).exec().catch(err => {
     handleError({ ctx, err, message: '标签列表获取失败' })
   })
-  await getTagsCount(ctx, tags)
+
+  const tagsIds = tags.map(tag => tag._id)
+
+  for (let i = 0; i < tags.length; i++) {
+    tags[i] = tags[i].toObject()
+    const articles = await ArticleModel.find({ tag: tags[i]._id}).exec()
+    tags[i].count = articles.length
+  }
+
+  handleSuccess({
+    ctx,
+    message: '标签列表获取成功',
+    data: {
+      list: tags,
+      total: tags.length
+    }
+  })
 
 }
 
@@ -113,6 +94,12 @@ tagCtrl.list.DELETE = async (ctx, next) => {
     handleError({ ctx, message: '未选中标签' })
     return
   }
+
+  const articles = await ArticleModel.find({ tag: { $in: tags } }).exec()
+  if (articles && articles.length) {
+    return handleError({ ctx, message: '删除的标签下还有文章，不能删除' })
+  }
+
   const data = await TagModel.remove({ _id: { $in: tags }}).catch(err => {
     handleError({ ctx, message: `${tags.length>1?'批量':''}删除标签失败`, err })
   })
@@ -169,24 +156,13 @@ tagCtrl.item.PUT = async (ctx, next) => {
     return handleError({ ctx, message })
   }
 
-  const putTag = async () => {
-    await TagModel.findByIdAndUpdate(id, tag, { new: true }).exec()
-      .then(data => {
-        handleSuccess({ ctx, message: '修改标签成功', data })
-      })
-      .catch(err => {
-        handleError({ ctx, message: '修改标签失败' })
-      })
-  }
-
-  let { length } = await TagModel.find({ name }).exec().catch(err => {
-    handleError({ ctx, err, message: '修改标签失败' })
-  })
-  if (!length) {
-    await putTag()
-  } else {
-    handleError({ ctx, message: '该标签名称已存在' })
-  }
+  await TagModel.findByIdAndUpdate(id, tag, { new: true }).exec()
+    .then(data => {
+      handleSuccess({ ctx, message: '修改标签成功', data })
+    })
+    .catch(err => {
+      handleError({ ctx, message: '修改标签失败' })
+    })
 }
 
 // 删除单个标签
@@ -196,6 +172,12 @@ tagCtrl.item.DELETE = async (ctx, next) => {
     handleError({ ctx, message: '缺少标签ID' })
     return
   }
+
+  const articles = await ArticleModel.find({ tag: id }).exec()
+  if (articles && articles.length) {
+    return handleError({ ctx, message: '该标签下还有文章，不能删除' })
+  }
+
   await TagModel.findByIdAndRemove(id).exec()
     .then(data => {
       handleSuccess({ ctx, message: '删除标签成功' })
