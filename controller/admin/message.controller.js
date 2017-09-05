@@ -7,6 +7,7 @@
 
 import { handleRequest, handleSuccess, handleError, isObjectId } from '../../utils'
 import { MessageModel, ArticleModel } from '../../model'
+import { gravatar } from '../../utils'
 
 const messageCtrl = {
   list: {},
@@ -36,7 +37,7 @@ messageCtrl.list.GET = async (ctx, next) => {
 
   // 消息查询条件
   const query = {}
-  
+
   // 消息状态
   if (['0', '1', 0, 1].includes(state)) {
     query.state = state
@@ -71,10 +72,13 @@ messageCtrl.list.GET = async (ctx, next) => {
 
   for (let i = 0; i < tmp.length; i++) {
     const message = tmp[i].toObject()
-    if (message.comment && isObjectId(message.comment.pageId)) {
-      const article = await ArticleModel.findById(message.comment.pageId).select('title').exec()
-      message.post = article.toObject()
-      messages.push(message)
+    if (message.comment) {
+      message.comment.author.avatar = gravatar(message.comment.author.email)
+      if (isObjectId(message.comment.pageId)) {
+        const article = await ArticleModel.findById(message.comment.pageId).select('title').exec()
+        message.post = article.toObject()
+        messages.push(message)
+      }
     }
   }
 
