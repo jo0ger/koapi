@@ -101,6 +101,5 @@ export default async (ctx, next) => {
       message: '少侠，我不认识你！'
     })
   }
-  console.log(ctx._verify)
   return next()
 }

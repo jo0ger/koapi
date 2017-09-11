@@ -9,8 +9,8 @@ import mongoosePaginate from 'mongoose-paginate'
 const tagSchema = new mongoose.Schema({
   name: { type: String, required: true },
   description: String,
-  createAt: { type: Number, default: Date.now },
-  updateAt: Number,
+  createAt: { type: Date, default: Date.now },
+  updateAt: { type: Date, default: Date.now },
   // 扩展项
   // icon color 等
   extends: [ { key: String, value: Object } ]

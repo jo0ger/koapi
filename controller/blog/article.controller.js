@@ -118,10 +118,10 @@ articleCtrl.list.GET = async (ctx, next) => {
   // 虽然hot可以放在sort里，但这里为了前台热门文章获取，单独列出hot
   // hot和sort二者只能存其一
   if (hot) {
-    // hot 按照评论，点赞数，浏览量，创建时间进行倒序排序
+    // hot 按照点赞数，评论，浏览量，创建时间进行倒序排序
     options.sort = {
-      'meta.comments': -1,
       'meta.ups': -1,
+      'meta.comments': -1,
       'meta.pvs': -1,
       createAt: -1
     }
@@ -256,12 +256,8 @@ articleCtrl.list.POST = async (ctx, next) => {
   article.renderedContent = content && marked(content) || ''
 
   await new ArticleModel(article).save()
-    .then(data => {
-      handleSuccess({ ctx, data, message: `${action}成功` })
-    })
-    .catch(err => {
-      handleError({ ctx, err, message: `${action}失败` })
-    })
+    .then(data => handleSuccess({ ctx, data, message: `${action}成功` }))
+    .catch(err => handleError({ ctx, err, message: `${action}失败` }))
 }
 
 // 批量修改文章（回收站，草稿箱，发布）

@@ -32,4 +32,8 @@ export default router => {
 
   // Like 点赞
   router.all(`${prefix}-like`, `/${prefix}/like`, blogControllers.like)
+
+  // Sitemap 站点地图
+  router.all(`${prefix}-sitemap`, `/${prefix}/sitemap`, blogControllers.sitemap)
+  router.all(`${prefix}-sitemap`, `/${prefix}/sitemap.xml`, blogControllers.sitemap)
 }

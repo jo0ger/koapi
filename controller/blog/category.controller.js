@@ -89,20 +89,12 @@ categoryCtrl.list.POST = async (ctx, next) => {
     handleError({ ctx, message: '缺少分类名称' })
     return
   }
-  // 保存category
-  const saveCategory = async () => {
-    await CategoryModel.create(category).then(data => {
-      handleSuccess({ ctx, message: '新建分类成功', data })
-    }).catch(err => {
-      handleError({ ctx, err, message: '新建分类失败' })
-    })
-  }
-
-  let { length } = await CategoryModel.find({ name }).exec().catch(err => {
-    handleError({ ctx, err, message: '新建分类失败' })
-  })
+  
+  const { length } = await CategoryModel.find({ name }).exec().catch(err => handleError({ ctx, err, message: '新建分类失败' }))
+  
   if (!length) {
-    await saveCategory()
+    const data = await new CategoryModel(category).save().catch(err => handleError({ ctx, err, message: '新建分类失败' }))
+    handleSuccess({ ctx, message: '新建分类成功', data })
   } else {
     handleError({ ctx, message: '该分类名称已存在' })
   }

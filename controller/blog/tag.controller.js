@@ -72,16 +72,11 @@ tagCtrl.list.POST = async (ctx, next) => {
     return
   }
 
-  const { length } = await TagModel.find({ name }).exec().catch(err => {
-    handleError({ ctx, err, message: '新建标签失败' })
-  })
+  const { length } = await TagModel.find({ name }).exec().catch(err => handleError({ ctx, err, message: '新建标签失败' }))
 
   if (!length) {
-    await TagModel.create(tag).then(data => {
-      handleSuccess({ ctx, message: '新建标签成功', data })
-    }).catch(err => {
-      handleError({ ctx, err, message: '新建标签失败' })
-    })
+    const data = await new TagModel(tag).save().catch(err => handleError({ ctx, err, message: '新建标签失败' }))
+    handleSuccess({ ctx, message: '新建标签成功', data })
   } else {
     handleError({ ctx, message: '该标签名称已存在' })
   }

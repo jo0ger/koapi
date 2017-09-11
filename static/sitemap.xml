@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:mobile="http://www.google.com/schemas/sitemap-mobile/1.0" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+<url> <loc>http://jooger.me/</loc> <changefreq>always</changefreq> <priority>1.0</priority> </url>
+<url> <loc>http://jooger.me/about</loc> <changefreq>always</changefreq> <priority>1.0</priority> </url>
+<url> <loc>http://jooger.me/sitemap</loc> <changefreq>always</changefreq> <priority>1.0</priority> </url>
+<url> <loc>http://jooger.me/guestbook</loc> <changefreq>always</changefreq> <priority>1.0</priority> </url>
+<url> <loc>http://jooger.me/article/59b25c6d2d0b00e6672035fd</loc> <lastmod>2017-09-11T10:19:28.642Z</lastmod> <changefreq>daily</changefreq> <priority>0.8</priority> </url>
+<url> <loc>http://jooger.me/article/59b2599d2d0b00e6672035fc</loc> <lastmod>2017-09-11T10:17:15.939Z</lastmod> <changefreq>daily</changefreq> <priority>0.8</priority> </url>
+<url> <loc>http://jooger.me/article/59b258ce2d0b00e6672035fb</loc> <lastmod>2017-09-11T10:18:43.585Z</lastmod> <changefreq>daily</changefreq> <priority>0.8</priority> </url>
+<url> <loc>http://jooger.me/article/59a44baaeb157b93ed307240</loc> <lastmod>2017-09-11T10:38:50.292Z</lastmod> <changefreq>daily</changefreq> <priority>0.8</priority> </url>
+<url> <loc>http://jooger.me/article/5995c16070e86d072d0fa433</loc> <lastmod>2017-09-11T02:27:30.868Z</lastmod> <changefreq>daily</changefreq> <priority>0.8</priority> </url>
+<url> <loc>http://jooger.me/article/5995bb2870e86d072d0fa432</loc> <lastmod>2017-09-11T11:34:38.320Z</lastmod> <changefreq>daily</changefreq> <priority>0.8</priority> </url>
+<url> <loc>http://jooger.me/article/5995b1fe70e86d072d0fa430</loc> <lastmod>2016-09-08T08:57:40.404Z</lastmod> <changefreq>daily</changefreq> <priority>0.8</priority> </url>
+<url> <loc>http://jooger.me/article/599154367d13aa352f1f1e22</loc> <lastmod>2016-09-11T09:10:58.306Z</lastmod> <changefreq>daily</changefreq> <priority>0.8</priority> </url>
+<url> <loc>http://jooger.me/category/CODE</loc> <lastmod>2017-09-11T10:19:28.642Z</lastmod> <changefreq>daily</changefreq> <priority>0.6</priority> </url>
+<url> <loc>http://jooger.me/category/THINK</loc> <lastmod>2017-09-11T10:19:28.642Z</lastmod> <changefreq>daily</changefreq> <priority>0.6</priority> </url>
+<url> <loc>http://jooger.me/category/TEST</loc> <lastmod>2017-09-11T10:19:28.642Z</lastmod> <changefreq>daily</changefreq> <priority>0.6</priority> </url>
+<url> <loc>http://jooger.me/category/HTTP</loc> <lastmod>2017-09-11T10:19:28.642Z</lastmod> <changefreq>daily</changefreq> <priority>0.6</priority> </url>
+<url> <loc>http://jooger.me/category/LIFE</loc> <lastmod>2017-09-11T10:19:28.642Z</lastmod> <changefreq>daily</changefreq> <priority>0.6</priority> </url>
+<url> <loc>http://jooger.me/tag/Vue</loc> <lastmod>2017-09-11T10:19:28.642Z</lastmod> <changefreq>daily</changefreq> <priority>0.6</priority> </url>
+<url> <loc>http://jooger.me/tag/React</loc> <lastmod>2017-09-11T10:19:28.642Z</lastmod> <changefreq>daily</changefreq> <priority>0.6</priority> </url>
+<url> <loc>http://jooger.me/tag/123</loc> <lastmod>2017-09-11T10:19:28.642Z</lastmod> <changefreq>daily</changefreq> <priority>0.6</priority> </url>
+<url> <loc>http://jooger.me/tag/222</loc> <lastmod>2017-09-11T10:19:28.642Z</lastmod> <changefreq>daily</changefreq> <priority>0.6</priority> </url>
+<url> <loc>http://jooger.me/tag/chrome</loc> <lastmod>2017-09-11T10:19:28.642Z</lastmod> <changefreq>daily</changefreq> <priority>0.6</priority> </url>
+</urlset>

@@ -16,6 +16,7 @@ const optionSchema = new mongoose.Schema({
     keywords: { type: Array, default: [] },
     description: { type: String, default: '' },
     author: { type: String, default: config.info.author },
+    bg: { type: String, default: '' },
     siteUrl: { type: String, default: '' },
     siteEmail: { type: String, required: true, validate: /\w[-\w.+]*@([A-Za-z0-9][-A-Za-z0-9]+\.)+[A-Za-z]{2,14}/ },
     language: { type: String, default: 'zh-Hans' },
