@@ -16,7 +16,7 @@ archivesCtrl.GET = async (ctx, next) => {
   let $limit = Number(pageSize || config.blog.postLimit)
   let $skip = ($page - 1) * $limit
 
-  let total = await ArticleModel.count($match).exec()
+  // let total = await ArticleModel.count($match).exec()
 
   let list = await ArticleModel.aggregate([
     { $match },
@@ -55,15 +55,16 @@ archivesCtrl.GET = async (ctx, next) => {
       }
     } }
   ])
-  .exec().catch(err => {
-     handleError({ ctx, err, message: '获取文章归档失败' })
-  })
+  .exec().catch(err => handleError({ ctx, err, message: '获取文章归档失败' }))
   if (list) {
-    for (let m = 0, archive = list[m]; m < list.length; m++) {
+    for (let m = 0; m < list.length; m++) {
+      let archive = list[m]
       for (let n = 0; n < archive.list.length; n++) {
         let a = await ArticleModel.findById(archive.list[n]._id)
+          .select('title category tag createAt updateAt meta')
           .populate('category tag')
-          .select('title category tag createAt updateAt meta').exec()
+          .exec()
+        console.log(archive.list[n]._id)
         archive.list.splice(n, 1, a.toObject())
       }
     }
@@ -75,8 +76,8 @@ archivesCtrl.GET = async (ctx, next) => {
     handleSuccess({
       ctx, 
       data: {
-        list,
-        total
+        list
+        // total
         // pagination: {
         //   total,
         //   current_page: $page,
