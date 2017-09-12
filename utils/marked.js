@@ -2,8 +2,8 @@
  *  渲染markdown
  */
 
-const highlight = require('highlight.js')
-const marked = require('marked')
+import highlight from 'highlight.js'
+import marked from 'marked'
 
 const languages = ['cpp', 'xml', 'bash', 'coffeescript', 'css', 'markdown', 'http', 'java', 'javascript', 'json', 'less', 'makefile', 'nginx', 'php', 'python', 'scss', 'sql', 'stylus']
 highlight.registerLanguage('cpp', require('highlight.js/lib/languages/cpp'))
@@ -28,7 +28,7 @@ highlight.configure({
   classPrefix: ''     // don't append class prefix
 })
 
-let renderer = new marked.Renderer()
+const renderer = new marked.Renderer()
 
 renderer.heading = function (text, level) {
   return `<h${level} id="${generateId()}">${text}</h${level}>`
@@ -44,6 +44,33 @@ renderer.link = (href, title, text) => {
     title="${title || ''}"
     ${isOrigin ? '' : 'rel="external nofollow"'}>${text}</a>
   `
+}
+
+renderer.code = function (code, lang, escaped) {
+  if (this.options.highlight) {
+    var out = this.options.highlight(code, lang)
+    if (out != null && out !== code) {
+      escaped = true
+      code = out
+    }
+  }
+
+  const codeLine = '<ul class="code-line">'
+    + code.split('\n').map((line, index) => `<li class="line">${index + 1}</li>`.replace(/\s+/g, ' ')).join('')
+    + '</ul>'
+
+  if (!lang) {
+    return '<pre>' + codeLine + '<code>'
+      + (escaped ? code : escape(code, true))
+      + '\n</code></pre>'
+  }
+
+  return '<pre>' + codeLine + '<code class="'
+    + this.options.langPrefix
+    + escape(lang, true)
+    + '">'
+    + (escaped ? code : escape(code, true))
+    + '\n</code></pre>\n'
 }
 
 marked.setOptions({
@@ -72,6 +99,15 @@ function generateId (len) {
     id += chars[Math.floor(Math.random() * chars.length)]
   }
   return id
+}
+
+function escape (html, encode) {
+  return html
+    .replace(!encode ? /&(?!#?\w+;)/g : /&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 export default marked

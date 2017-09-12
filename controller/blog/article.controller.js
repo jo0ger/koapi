@@ -232,6 +232,7 @@ articleCtrl.list.GET = async (ctx, next) => {
 articleCtrl.list.POST = async (ctx, next) => {
   const article = ctx.request.body
   const { title, content, category, tag } = article
+
   const { success, message } = validator.validate(article, ['title', 'content', 'tag', 'category', 'keywords', 'extends'])
   if (!success) {
     return handleError({ ctx, message })
@@ -251,8 +252,7 @@ articleCtrl.list.POST = async (ctx, next) => {
     }).filter(item => !!item)
   }
 
-  const action = article.state === 1 ? '新建文章（已发布）' : '新建草稿'
-
+  const action = article.state == 1 ? '新建文章' : '新建草稿'
   article.renderedContent = content && marked(content) || ''
 
   await new ArticleModel(article).save()
