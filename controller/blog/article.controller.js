@@ -376,13 +376,13 @@ articleCtrl.item.GET = async (ctx, next) => {
       .populate('category tag')
       .exec()
       .catch(err => handhandleError({ ctx, err, message: '文章详情获取失败' }))
-    if (data) {
-      data = data.toObject()
-    }
+    data && (data = data.toObject())
   }
-
-  handleSuccess({ ctx, data, message: '文章详情获取成功' })    
-  
+  if (data) {
+    handleSuccess({ ctx, data, message: '文章详情获取成功' })    
+  } else {
+    handleError({ ctx, message: '文章未找到' })
+  }
 }
 
 // 修改单篇文章

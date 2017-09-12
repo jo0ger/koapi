@@ -64,7 +64,6 @@ archivesCtrl.GET = async (ctx, next) => {
           .select('title category tag createAt updateAt meta')
           .populate('category tag')
           .exec()
-        console.log(archive.list[n]._id)
         archive.list.splice(n, 1, a.toObject())
       }
     }
