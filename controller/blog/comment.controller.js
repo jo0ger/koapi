@@ -98,7 +98,7 @@ commentCtrl.list.GET = async (ctx, next) => {
   // 如果未通过权限校验，将评论状态重置为1，并且不返回content
   if (!ctx._verify) {
     query.state = 1
-    options.select += '-content'
+    options.select += ' -content -updateAt -state -akimetSpam'
   }
 
   const parents = await CommentModel.paginate(query, options).catch(err => {
@@ -485,24 +485,30 @@ commentCtrl.author.GET = async (ctx, next) => {
 
   const { pageId } = ctx.query
 
+  const $group = {
+    _id: {
+      name: '$author.name',
+      email: '$author.email'
+    },
+    name: { $first: '$author.name' },
+    email: { $first: '$author.email' },
+    site: { $first: '$author.site' }
+  }
+
+
+  if (ctx._verify) {
+    $group.count = { $sum: 1 }
+  }
+
   const opt = [
-    { 
+    {
       $project: {
         _id: 0,
         author: 1
       }
     },
     {
-      $group: {
-        _id: {
-          name: '$author.name',
-          email: '$author.email'
-        },
-        name: { $first: '$author.name' },
-        email: { $first: '$author.email' },
-        site: { $first: '$author.site' },
-        count: { $sum: 1 }
-      }
+      $group
     },
     {
       $sort: {
@@ -524,6 +530,7 @@ commentCtrl.author.GET = async (ctx, next) => {
 
   data = data.map(item => {
     item.avatar = gravatar(item.email)
+    delete item._id
     return item
   })
 

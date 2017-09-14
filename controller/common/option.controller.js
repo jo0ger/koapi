@@ -2,7 +2,7 @@
  * 配置 controller
  */
 
-import { handleRequest, handleSuccess, handleError, isType, isObjectId } from '../../utils'
+import { handleRequest, handleSuccess, handleError, isType, isObjectId, gravatar } from '../../utils'
 import { OptionModel } from '../../model'
 import { updateQiniuClient } from '../admin/qiniu.controller'
 
@@ -36,15 +36,20 @@ optionCtrl.GET = async (ctx, next) => {
     return handleError({ ctx, message: '未知类型的配置信息请求' })
   }
 
-  await OptionModel.findOne({})
+  let data = await OptionModel.findOne({})
     .select(type + ' -_id')
     .exec()
-    .then(data => {
-      handleSuccess({ ctx, data, message: '配置信息获取成功' })
-    })
-    .catch(err => {
-      handleError({ ctx, err, message: '配置信息获取失败' })
-    })
+    .catch(err => handleError({ ctx, err, message: '配置信息获取失败' }))
+
+  if (data) {
+    data = data.toObject()
+    if (data.blog) {
+      data.blog.avatar = gravatar(data.blog.email)
+    }
+    handleSuccess({ ctx, data, message: '配置信息获取成功' })
+  } else {
+    handleError({ ctx, message: '配置信息获取失败' })
+  }
 }
 
 // 新增配置信息

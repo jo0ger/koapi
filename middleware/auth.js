@@ -21,7 +21,7 @@ const EXCLUDE_AUTH = [
 
 // GET请求中，需要验证的url和method
 const INCLUDE_AUTH = [
-  { url: 'comment/author', type: ['GET'] },
+  // { url: 'comment/author', type: ['GET'] },
   { url: 'admin/qiniu', type: ['GET'] },
   { url: 'admin/message', type: ['GET'] },
 ]
