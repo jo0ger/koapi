@@ -2,7 +2,7 @@
  * 数据库初始化的管理员信息
  */
 
-import config from './index'
+import config from '.'
 
 export default {
   name: config.info.author,

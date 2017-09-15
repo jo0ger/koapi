@@ -58,18 +58,25 @@ authCtrl.login.POST = async (ctx, next) => {
       handleError({ ctx, err, message: '登录失败' })
     })
   const encodePassword = md5Encode(password)
-  if (auth && auth.name === name && auth.password === encodePassword) {
-    auth = auth.toObject()
-    const token = signUserToken({
-      id: auth._id, 
-      name: auth.name
-    }, true)
-    ctx.cookies.set(cookieName, token, { signed: true })
-    handleSuccess({ ctx, data: { info: { ...auth }, token }, message: '登录成功' })
-  } else if (auth.name !== name) {
-    handleError({ ctx, message: '少侠，名字错啦！' })
-  } else if (auth.password !== encodePassword) {
-    handleError({ ctx, message: '少侠，密码错啦！' })
+  if (auth) {
+    if (auth.name === name && auth.password === encodePassword) {
+      auth = auth.toObject()
+      const token = signUserToken({
+        id: auth._id, 
+        name: auth.name
+      }, true)
+      ctx.cookies.set(cookieName, token, {
+        signed: true,
+        domain: ctx.requestrequest.get('origin')
+      })
+      handleSuccess({ ctx, data: { info: { ...auth }, token }, message: '登录成功' })
+    } else if (auth.name !== name) {
+      handleError({ ctx, message: '少侠，名字错啦！' })
+    } else if (auth.password !== encodePassword) {
+      handleError({ ctx, message: '少侠，密码错啦！' })
+    } else {
+      handleError({ ctx, message: '少侠，我不认识你！' })
+    }
   } else {
     handleError({ ctx, message: '少侠，我不认识你！' })
   }
@@ -82,7 +89,10 @@ authCtrl.logout.GET = async (ctx, next) => {
     id: auth._id, 
     name: auth.name
   }, false)
-  ctx.cookies.set(cookieName, token, { signed: true })
+  ctx.cookies.set(cookieName, token, {
+    signed: true,
+    domain: ctx.requestrequest.get('origin')
+  })
   handleSuccess({ ctx, message: '退出成功' })
 } 
 
