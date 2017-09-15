@@ -10,7 +10,8 @@
     "debug": "node --inspect=5000 bin/run",
     "dev": "cross-env NODE_ENV=development ./node_modules/.bin/nodemon bin/run",
     "prod": "cross-env NODE_ENV=production pm2 start bin/run --name='koapi'",
-    "prod-log": "cross-env NODE_ENV=production log=true pm2 start bin/run --name='koapi'"
+    "prod-log": "cross-env NODE_ENV=production log=true pm2 start bin/run --name='koapi'",
+    "deploy": "pm2 deploy ecosystem.config.js production"
   },
   "repository": {
     "type": "git",

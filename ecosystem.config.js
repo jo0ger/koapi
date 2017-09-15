@@ -27,11 +27,11 @@ module.exports = {
   deploy : {
     production : {
       user : 'root',
-      host : '45.77.14.126',
+      host : 'jooger.me',
       ref  : 'origin/master',
       repo : packageConfig.repository.url,
       path : '/var/www/' + packageConfig.name,
-      'post-deploy' : 'npm install && pm2 reload ecosystem.config.js --env production'
+      'post-deploy' : 'npm install && pm2 stop all && npm run build && pm2 reload ecosystem.config.js --env production && pm2 start all'
     }
   }
 }

@@ -43,6 +43,7 @@ export default {
         'jooger.me',
         'www.jooger.me',
         'blog.jooger.me',
+        'admin.jooger.me',
         'project.jooger.me',
         'gallery.jooger.me'
       ]
