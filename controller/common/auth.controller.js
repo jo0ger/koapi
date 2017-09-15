@@ -67,7 +67,7 @@ authCtrl.login.POST = async (ctx, next) => {
       }, true)
       ctx.cookies.set(cookieName, token, {
         signed: true,
-        domain: ctx.requestrequest.get('origin')
+        domain: ctx.request.get('origin')
       })
       handleSuccess({ ctx, data: { info: { ...auth }, token }, message: '登录成功' })
     } else if (auth.name !== name) {
@@ -91,10 +91,10 @@ authCtrl.logout.GET = async (ctx, next) => {
   }, false)
   ctx.cookies.set(cookieName, token, {
     signed: true,
-    domain: ctx.requestrequest.get('origin')
+    domain: ctx.request.get('origin')
   })
   handleSuccess({ ctx, message: '退出成功' })
-} 
+}
 
 // 修改个人信息
 authCtrl.info.PUT = async (ctx, next) => {
